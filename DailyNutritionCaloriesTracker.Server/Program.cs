@@ -4,11 +4,24 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
+// Add CORS policy for development
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowViteDevServer",
+        policy =>
+        {
+            policy.WithOrigins("https://localhost:5173")
+                  .AllowAnyMethod()
+                  .AllowAnyHeader()
+                  .AllowCredentials();
+        });
+});
+
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
         //options.JsonSerializerOptions.PropertyNamingPolicy = null; // Preserve case sensitivity
-        options.JsonSerializerOptions.IgnoreNullValues = true;
+        options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
     });
 
 // Add AutoMapper
@@ -32,6 +45,7 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+    app.UseCors("AllowViteDevServer");
 }
 
 app.UseHttpsRedirection();

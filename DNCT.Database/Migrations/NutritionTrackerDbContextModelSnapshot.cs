@@ -8,7 +8,7 @@ using NT.Database.Context;
 
 #nullable disable
 
-namespace NT.Database.Migrations
+namespace NT.Ef.Database.Migrations
 {
     [DbContext(typeof(NutritionTrackerDbContext))]
     partial class NutritionTrackerDbContextModelSnapshot : ModelSnapshot
@@ -149,7 +149,7 @@ namespace NT.Database.Migrations
             modelBuilder.Entity("NT.Database.Entities.FoodItem", b =>
                 {
                     b.HasOne("NT.Database.Entities.FoodLog", "FoodLog")
-                        .WithMany()
+                        .WithMany("FoodItems")
                         .HasForeignKey("FoodLogId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -174,6 +174,11 @@ namespace NT.Database.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("NT.Database.Entities.FoodLog", b =>
+                {
+                    b.Navigation("FoodItems");
                 });
 #pragma warning restore 612, 618
         }

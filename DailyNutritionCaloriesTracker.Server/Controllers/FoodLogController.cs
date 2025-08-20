@@ -69,19 +69,18 @@ public class FoodLogController : ControllerBase
         //2 need to fix bug here, on
         //FoodLogEntity entity = _mapper.Map<FoodLogEntity>(foodLogDto);
 
-
         //temp bypass, need to covert to real after user controller added
-        entity3.UserId = Guid.Parse("2c82025f-f351-4246-aaff-21301ec71803");
+        entity3.UserId = Guid.Parse("00000000-0000-0000-0000-000000000001");
 
         //UI work need to include the guid, it will be removed
         foreach (FoodItemEntity item in entity3.FoodItems)
         {
-            item.FoodNutritionId = Guid.Parse("B83D0C39-DBEA-44C8-EC45-08DC5AC3A936");
+            // Use the first food nutrition ID from the database (will be populated by SQL script)
+            item.FoodNutritionId = Guid.Parse("11111111-1111-1111-1111-111111111111");
         }
 
         // Process the data
         await _foodLogService.AddAsync(entity3);
-
 
         return Ok();
     }

@@ -34,7 +34,11 @@ A web application inspired by the Microsoft To-Do app that helps users track the
 - run the following command in the Package Manager Console:
 ```
 dotnet tool install --global dotnet-ef
-dotnet add package Microsoft.EntityFrameworkCore.Design
-DailyNutritionCaloriesTracker\DailyNutritionCaloriesTracker.Server> dotnet ef migrations add InitialCreate --project ..\DNCT.Database\NT.Database.csproj
-DailyNutritionCaloriesTracker\DailyNutritionCaloriesTracker.Server> dotnet ef database update --project ..\DNCT.Database\NT.Database.csproj
+dotnet add package Microsoft.EntityFrameworkCore.Design //this will update the package, and mass up the version, dont do it
+
+just need to clean up the migration folder under Database, then run the command below, or you can ignore
+DailyNutritionCaloriesTracker\DailyNutritionCaloriesTracker.Server> dotnet ef migrations add InitialCreate --project ..\DNCT.Database\NT.Ef.Database.csproj
+
+need to update appsetting.development.json, then run this command
+DailyNutritionCaloriesTracker\DailyNutritionCaloriesTracker.Server> dotnet ef database update --project ..\DNCT.Database\NT.Ef.Database.csproj
 ```
