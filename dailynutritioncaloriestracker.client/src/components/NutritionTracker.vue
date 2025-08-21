@@ -20,7 +20,7 @@
             <progress-bar label="Protein" :value="totalProtein" :max="suggestedProtein" color="blue"></progress-bar>
 
             <div v-if="post" class="content">
-                <DailyFoodEntryTable :post="post" :entries="entries" />
+                <DailyFoodEntryTable :post="post" :entries="entries" @food-log-submitted="$emit('food-log-submitted')" />
             </div>
 
             <!-- Display nutrition table so far -->
@@ -42,6 +42,7 @@
             NutritionTable,
             DailyFoodEntryTable
         },
+        emits: ['food-log-submitted'],
         data() {
             return {
                 loading: false,
