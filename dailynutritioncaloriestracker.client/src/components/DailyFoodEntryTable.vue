@@ -42,6 +42,7 @@
     import { FoodItemDto } from '@/models/FoodItemDto';
 
     export default {
+        emits: ['food-log-submitted'],
         props: {
             post: Array,
             entries: Array
@@ -91,7 +92,8 @@
                 axios.post('/foodlog/createfoodlog', foodLogDto )
                     .then(response => {
                         console.log('Food log created successfully:', response.data);
-                        alert('Food log submitted successfully!');
+                        //alert('Food log submitted successfully!');
+                        this.$emit('food-log-submitted'); // Emit the event
                     })
                     .catch(error => {
                         console.error('Error creating food log:', error);
