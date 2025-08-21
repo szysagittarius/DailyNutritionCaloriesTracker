@@ -2,6 +2,13 @@
     import NutritionTracker from './components/NutritionTracker.vue'
 import TheWelcome from './components/TheWelcome.vue'
     import FoodLog from './components/FoodLog.vue'
+    import { ref } from 'vue'
+
+    const foodLogKey = ref(0)
+
+    const handleFoodLogSubmitted = () => {
+        foodLogKey.value++
+    }
 </script>
 
 <template>
@@ -9,7 +16,7 @@ import TheWelcome from './components/TheWelcome.vue'
     <!--<img alt="Vue logo" class="logo" src="./assets/logo.svg" width="125" height="125" />-->
 
     <div class="wrapper">
-      <NutritionTracker msg="You did it!" />
+      <NutritionTracker msg="You did it!" @food-log-submitted="handleFoodLogSubmitted" />
     </div>
   </header>
 
@@ -17,7 +24,7 @@ import TheWelcome from './components/TheWelcome.vue'
       <TheWelcome />
 
       <div id="app">
-          <FoodLog></FoodLog>
+          <FoodLog :key="foodLogKey"></FoodLog>
       </div>
   </main>
 </template>
