@@ -1,92 +1,69 @@
 <script setup>
-    import NutritionTracker from './components/NutritionTracker.vue'
-    import TheWelcome from './components/TheWelcome.vue'
-    import FoodLog from './components/FoodLog.vue'
-    import { ref } from 'vue'
-    import { useRouter } from 'vue-router'
-    import api from './services/api'
+import NutritionTracker from '../components/NutritionTracker.vue'
+import TheWelcome from '../components/TheWelcome.vue'
+import FoodLog from '../components/FoodLog.vue'
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import api from '../services/api'
 
-    const foodLogKey = ref(0)
-    const activeTab = ref('home')
-    const router = useRouter()
-    const currentUser = ref(api.getCurrentUser())
+const foodLogKey = ref(0)
+const activeTab = ref('home')
+const router = useRouter()
+const currentUser = ref(api.getCurrentUser())
 
-    const handleFoodLogSubmitted = () => {
-        foodLogKey.value++
-    }
+const handleFoodLogSubmitted = () => {
+    foodLogKey.value++
+}
 
-    const setActiveTab = (tab) => {
-        activeTab.value = tab
-    }
+const setActiveTab = (tab) => {
+    activeTab.value = tab
+}
 
-    const handleLogout = () => {
-        api.logout()
-        router.push('/login')
-    }
+const handleLogout = () => {
+    api.logout()
+    router.push('/login')
+}
 </script>
 
 <template>
-  <div id="app">
-    <router-view v-if="$route.path === '/login'" />
-    <div v-else>
-      <header>
-        <!-- Menu Bar -->
-        <nav class="menu-bar">
-          <ul class="tab-list">
-            <li class="tab-item" :class="{ active: activeTab === 'home' }" @click="setActiveTab('home')">
-              Home
-            </li>
-            <li class="tab-item" :class="{ active: activeTab === 'profile' }" @click="setActiveTab('profile')">
-              User Profile
-            </li>
-            <li class="tab-item" :class="{ active: activeTab === 'nutrition' }" @click="setActiveTab('nutrition')">
-              Food Nutrition Management
-            </li>
-            <li class="tab-item" :class="{ active: activeTab === 'foodlog' }" @click="setActiveTab('foodlog')">
-              Food Log
-            </li>
-            <li class="user-info">
-              <span>Welcome, {{ currentUser?.username || 'User' }}!</span>
-              <button @click="handleLogout" class="logout-btn">Logout</button>
-            </li>
-          </ul>
-        </nav>
-      </header>
+  <header>
+    <!-- Menu Bar -->
+    <nav class="menu-bar">
+      <ul class="tab-list">
+        <li class="tab-item" :class="{ active: activeTab === 'home' }" @click="setActiveTab('home')">
+          Home
+        </li>
+        <li class="tab-item" :class="{ active: activeTab === 'profile' }" @click="setActiveTab('profile')">
+          User Profile
+        </li>
+        <li class="tab-item" :class="{ active: activeTab === 'nutrition' }" @click="setActiveTab('nutrition')">
+          Food Nutrition Management
+        </li>
+        <li class="tab-item" :class="{ active: activeTab === 'foodlog' }" @click="setActiveTab('foodlog')">
+          Food Log
+        </li>
+        <li class="user-info">
+          <span>Welcome, {{ currentUser?.username }}!</span>
+          <button @click="handleLogout" class="logout-btn">Logout</button>
+        </li>
+      </ul>
+    </nav>
+  </header>
 
-      <main>
-        <TheWelcome />
-        <div class="main-content">
-          <div class="left-panel">
-            <NutritionTracker msg="You did it!" @food-log-submitted="handleFoodLogSubmitted" />
-          </div>
-          <div class="right-panel">
-            <FoodLog :key="foodLogKey"></FoodLog>
-          </div>
-        </div>
-      </main>
+  <main>
+    <TheWelcome />
+    <div class="main-content">
+      <div class="left-panel">
+        <NutritionTracker msg="You did it!" @food-log-submitted="handleFoodLogSubmitted" />
+      </div>
+      <div class="right-panel">
+        <FoodLog :key="foodLogKey"></FoodLog>
+      </div>
     </div>
-  </div>
+  </main>
 </template>
 
 <style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  color: #2c3e50;
-}
-
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  padding: 0;
-}
-
 :root {
   --content-max-width: 1200px;
   --header-height: 64px;

@@ -48,12 +48,37 @@ public class UserController : ControllerBase
     public async Task<IActionResult> PostAsync([FromBody] UserDto userDto)
     {
         //insert the UserDto to the database by calling the service
+        UserEntity entity = new UserEntity { Name = userDto.Name, Email = userDto.Email, Password = userDto.Password };
+        await _userService.AddAsync(entity);
+        return Ok(new { message = "User created successfully" });
+    }
 
-        UserEntity entity3 = new UserEntity { Name = "test", Email = "test", Password = "test" };
-        // Process the data
-        await _userService.AddAsync(entity3);
+    [HttpPost("login")]
+    public async Task<IActionResult> LoginAsync([FromBody] LoginDto loginDto)
+    {
+        try
+        {
+            // Validate input
+            if (string.IsNullOrEmpty(loginDto.Username) || string.IsNullOrEmpty(loginDto.Password))
+            {
+                return BadRequest(new { message = "Username and password are required" });
+            }
 
-
-        return Ok();
+            // Find user by username and verify password
+            var users = await _userService.GetAllAsync();
+            var user = users.FirstOrDefault(u => u.Name == loginDto.Username && u.Password == loginDto.Password);
+            
+            if (user == null)
+            {
+                return Unauthorized(new { message = "Invalid username or password" });
+            }
+            
+            return Ok(new { message = "Login successful",  username = user.Name });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error during login");
+            return StatusCode(500, new { message = "Internal server error" });
+        }
     }
 }
