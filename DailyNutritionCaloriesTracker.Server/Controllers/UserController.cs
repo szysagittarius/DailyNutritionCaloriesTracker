@@ -81,4 +81,79 @@ public class UserController : ControllerBase
             return StatusCode(500, new { message = "Internal server error" });
         }
     }
+
+    [HttpPut("updateprofile")]
+    public async Task<IActionResult> UpdateProfileAsync([FromBody] UpdateUserProfileDto updateProfileDto)
+    {
+        try
+        {
+            // Validate input
+            if (string.IsNullOrEmpty(updateProfileDto.Name))
+            {
+                return BadRequest(new { message = "Name is required" });
+            }
+
+            var users = await _userService.GetAllAsync();
+            var existingUser = users.FirstOrDefault(u => u.Name == updateProfileDto.Name);
+            
+            if (existingUser == null)
+            {
+                return NotFound(new { message = "User not found" });
+            }
+
+            // Modify the existing entity's properties directly
+            existingUser.Name = updateProfileDto.Name;
+            existingUser.Email = updateProfileDto.Email;
+            existingUser.SuggestedCalories = updateProfileDto.SuggestedCalories;
+            
+            // Only update password if provided
+            if (!string.IsNullOrEmpty(updateProfileDto.Password))
+            {
+                existingUser.Password = updateProfileDto.Password;
+            }
+
+            // Update the modified entity
+            UserEntity result = await _userService.UpdateAsync(existingUser);
+            
+            return Ok(new { 
+                message = "Profile updated successfully",
+                user = new {
+                    name = result.Name,
+                    email = result.Email,
+                    suggestedCalories = result.SuggestedCalories
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating user profile");
+            return StatusCode(500, new { message = "Internal server error" });
+        }
+    }
+
+    [HttpGet("profile/{username}")]
+    public async Task<IActionResult> GetProfileAsync(string username)
+    {
+        try
+        {
+            var users = await _userService.GetAllAsync();
+            var user = users.FirstOrDefault(u => u.Name == username);
+            
+            if (user == null)
+            {
+                return NotFound(new { message = "User not found" });
+            }
+            
+            return Ok(new {
+                name = user.Name,
+                email = user.Email,
+                suggestedCalories = user.SuggestedCalories
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting user profile");
+            return StatusCode(500, new { message = "Internal server error" });
+        }
+    }
 }

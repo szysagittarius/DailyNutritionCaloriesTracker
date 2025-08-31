@@ -1,60 +1,37 @@
 <template>
   <div class="login-container">
     <div class="login-card">
-      <h2>{{ isRegistering ? 'Register' : 'Login' }}</h2>
-      
-      <form @submit.prevent="handleSubmit">
+      <h2 class="login-title">Login to Nutrition Tracker</h2>
+      <form @submit.prevent="handleLogin" class="login-form">
         <div class="form-group">
-          <label for="username">Username:</label>
-          <input 
-            type="text" 
+          <label for="username" class="form-label">Username:</label>
+          <input
             id="username"
-            v-model="username" 
-            required 
+            v-model="username"
+            type="text"
             class="form-input"
+            placeholder="Enter your username"
+            required
           />
         </div>
-        
-        <div class="form-group" v-if="isRegistering">
-          <label for="email">Email:</label>
-          <input 
-            type="email" 
-            id="email"
-            v-model="email" 
-            required 
-            class="form-input"
-          />
-        </div>
-        
         <div class="form-group">
-          <label for="password">Password:</label>
-          <input 
-            type="password" 
+          <label for="password" class="form-label">Password:</label>
+          <input
             id="password"
-            v-model="password" 
-            required 
+            v-model="password"
+            type="password"
             class="form-input"
+            placeholder="Enter your password"
+            required
           />
         </div>
-        
-        <div class="form-actions">
-          <button type="submit" class="btn-primary" :disabled="loading">
-            {{ loading ? 'Processing...' : (isRegistering ? 'Register' : 'Login') }}
-          </button>
-          
-          <button 
-            type="button" 
-            @click="toggleForm" 
-            class="btn-secondary"
-          >
-            {{ isRegistering ? 'Switch to Login' : 'Switch to Register' }}
-          </button>
+        <button type="submit" class="login-button" :disabled="isLoading">
+          {{ isLoading ? 'Logging in...' : 'Login' }}
+        </button>
+        <div v-if="errorMessage" class="error-message">
+          {{ errorMessage }}
         </div>
       </form>
-      
-      <div v-if="errorMessage" class="error-message">
-        {{ errorMessage }}
-      </div>
     </div>
   </div>
 </template>
@@ -68,60 +45,35 @@ export default {
   name: 'Login',
   setup() {
     const username = ref('');
-    const email = ref('');
     const password = ref('');
-    const isRegistering = ref(false);
-    const loading = ref(false);
+    const isLoading = ref(false);
     const errorMessage = ref('');
     const router = useRouter();
 
-    const handleSubmit = async () => {
-      loading.value = true;
+    const handleLogin = async () => {
+      isLoading.value = true;
       errorMessage.value = '';
       
       try {
-        if (isRegistering.value) {
-          await api.createUser({ 
-            username: username.value, 
-            email: email.value, 
-            password: password.value 
-          });
-          alert('Registration successful! Please login.');
-          toggleForm();
-        } else {
-          await api.login({ 
-            username: username.value, 
-            password: password.value 
-          });
-          router.push('/'); // Redirect to main app
-        }
+        await api.login({ 
+          username: username.value, 
+          password: password.value 
+        });
+        router.push('/'); // Redirect to main app
       } catch (error) {
-        console.error('Error during submission:', error);
-        errorMessage.value = isRegistering.value 
-          ? 'Registration failed. Please try again.' 
-          : 'Invalid username or password.';
+        console.error('Error during login:', error);
+        errorMessage.value = 'Invalid username or password.';
       } finally {
-        loading.value = false;
+        isLoading.value = false;
       }
-    };
-
-    const toggleForm = () => {
-      isRegistering.value = !isRegistering.value;
-      username.value = '';
-      email.value = '';
-      password.value = '';
-      errorMessage.value = '';
     };
 
     return {
       username,
-      email,
       password,
-      isRegistering,
-      loading,
+      isLoading,
       errorMessage,
-      handleSubmit,
-      toggleForm,
+      handleLogin,
     };
   },
 };
@@ -139,99 +91,101 @@ export default {
 
 .login-card {
   background: white;
-  padding: 2rem;
   border-radius: 12px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  padding: 40px;
   width: 100%;
-  max-width: 400px;
+  max-width: 450px; /* Increased from mobile-first design */
+  min-width: 350px; /* Ensure minimum width for desktop */
 }
 
-.login-card h2 {
+@media (min-width: 768px) {
+  .login-card {
+    max-width: 500px; /* Even wider on tablets and up */
+    padding: 50px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .login-card {
+    max-width: 600px; /* Desktop width */
+    padding: 60px;
+  }
+}
+
+.login-title {
   text-align: center;
-  margin-bottom: 1.5rem;
   color: #333;
+  margin-bottom: 30px;
+  font-size: 1.8rem;
   font-weight: 600;
 }
 
-.form-group {
-  margin-bottom: 1rem;
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
-.form-group label {
-  display: block;
-  margin-bottom: 0.5rem;
-  color: #555;
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-label {
   font-weight: 500;
+  color: #555;
+  font-size: 0.95rem;
 }
 
 .form-input {
-  width: 100%;
-  padding: 0.75rem;
-  border: 2px solid #e1e1e1;
-  border-radius: 6px;
+  padding: 14px 16px; /* Increased padding for desktop */
+  border: 2px solid #e1e5e9;
+  border-radius: 8px;
   font-size: 1rem;
-  transition: border-color 0.3s ease;
-  box-sizing: border-box;
+  transition: all 0.3s ease;
+  background-color: #f8f9fa;
 }
 
 .form-input:focus {
   outline: none;
-  border-color: #007bff;
+  border-color: #667eea;
+  background-color: white;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
-.form-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  margin-top: 1.5rem;
-}
-
-.btn-primary {
-  width: 100%;
-  padding: 0.75rem;
-  background: #007bff;
+.login-button {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border: none;
-  border-radius: 6px;
-  font-size: 1rem;
-  font-weight: 500;
+  padding: 16px 24px; /* Increased padding */
+  border-radius: 8px;
+  font-size: 1.1rem; /* Larger font for desktop */
+  font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: all 0.3s ease;
+  margin-top: 10px;
 }
 
-.btn-primary:hover:not(:disabled) {
-  background: #0056b3;
+.login-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 }
 
-.btn-primary:disabled {
-  background: #6c757d;
+.login-button:disabled {
+  opacity: 0.7;
   cursor: not-allowed;
 }
 
-.btn-secondary {
-  width: 100%;
-  padding: 0.75rem;
-  background: transparent;
-  color: #007bff;
-  border: 2px solid #007bff;
-  border-radius: 6px;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.btn-secondary:hover {
-  background: #007bff;
-  color: white;
-}
-
 .error-message {
-  margin-top: 1rem;
-  padding: 0.75rem;
-  background: #f8d7da;
-  color: #721c24;
+  color: #dc3545;
+  text-align: center;
+  font-size: 0.9rem;
+  margin-top: 10px;
+  padding: 10px;
+  background-color: #f8d7da;
   border: 1px solid #f5c6cb;
   border-radius: 6px;
-  text-align: center;
 }
 </style>

@@ -43,21 +43,21 @@
             DailyFoodEntryTable
         },
         emits: ['food-log-submitted'],
+        props: {
+            suggestedCalories: {
+                type: Number,
+                default: 2456
+            }
+        },
         data() {
             return {
                 loading: false,
-                post: null,
-                suggestedCalories: 2456,                 
+                post: null,              
                 suggestedCarbs: 246, 
                 suggestedFat: 68, 
                 suggestedProtein: 215, 
                 entries: [{ name: '', amount: 0, calories: 0, protein: 0, carbs: 0, fat: 0 }],
             };
-        },
-        props: {
-            value: Number,
-            max: Number,
-            color: String,
         },
         computed: {
             totalCalories() {

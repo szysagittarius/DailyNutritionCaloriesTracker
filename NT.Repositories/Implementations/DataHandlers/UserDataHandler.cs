@@ -5,6 +5,7 @@ using NT.Database.Entities;
 using NT.Ef.Repositories.Abstractions;
 
 namespace NT.Ef.Repositories.Implementations.DataHandlers;
+
 internal class UserDataHandler : IUserDataHandler
 {
     private readonly IUserRepository _userRepository;
@@ -36,6 +37,12 @@ internal class UserDataHandler : IUserDataHandler
 
     public async Task<UserEntity> AddAsync(UserEntity userEntity)
     {
+        // Ensure the entity has an ID if it's new
+        if (userEntity.Id == Guid.Empty)
+        {
+            userEntity.Id = Guid.NewGuid();
+        }
+        
         User user = _mapper.Map<User>(userEntity);
         User addedUser = await _userRepository.AddAsync(user);
         return _mapper.Map<UserEntity>(addedUser);
@@ -55,8 +62,4 @@ internal class UserDataHandler : IUserDataHandler
     {
         throw new NotImplementedException();
     }
-
-
-
-
 }

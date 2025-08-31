@@ -2,6 +2,7 @@
     import NutritionTracker from './components/NutritionTracker.vue'
     import TheWelcome from './components/TheWelcome.vue'
     import FoodLog from './components/FoodLog.vue'
+    import ProfilePage from './components/ProfilePage.vue'
     import { ref } from 'vue'
     import { useRouter } from 'vue-router'
     import api from './services/api'
@@ -10,6 +11,7 @@
     const activeTab = ref('home')
     const router = useRouter()
     const currentUser = ref(api.getCurrentUser())
+    const userSuggestedCalories = ref(2456) // Default value
 
     const handleFoodLogSubmitted = () => {
         foodLogKey.value++
@@ -22,6 +24,10 @@
     const handleLogout = () => {
         api.logout()
         router.push('/login')
+    }
+
+    const handleProfileUpdated = (newSuggestedCalories) => {
+        userSuggestedCalories.value = newSuggestedCalories
     }
 </script>
 
@@ -55,9 +61,20 @@
 
       <main>
         <TheWelcome />
-        <div class="main-content">
+        
+        <!-- Profile Page -->
+        <div v-if="activeTab === 'profile'" class="profile-content">
+          <ProfilePage @profile-updated="handleProfileUpdated" />
+        </div>
+        
+        <!-- Main Content for other tabs -->
+        <div v-else class="main-content">
           <div class="left-panel">
-            <NutritionTracker msg="You did it!" @food-log-submitted="handleFoodLogSubmitted" />
+            <NutritionTracker 
+              msg="You did it!" 
+              :suggested-calories="userSuggestedCalories"
+              @food-log-submitted="handleFoodLogSubmitted" 
+            />
           </div>
           <div class="right-panel">
             <FoodLog :key="foodLogKey"></FoodLog>
@@ -201,6 +218,15 @@ main {
 /* Visuals for panels */
 .left-panel { background: #f8f9fa; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.06); }
 .right-panel { background: #fff; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.06); border: 1px solid #e0e0e0; }
+
+/* Profile Page specific styles */
+.profile-content {
+  padding-top: var(--header-height);
+  width: 100%;
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+  box-sizing: border-box;
+}
 
 /* Responsive: stack columns on small screens */
 @media (max-width: 900px) {

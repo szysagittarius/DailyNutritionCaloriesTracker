@@ -18,4 +18,7 @@ public record User
 
     [Column("Password", TypeName = "nvarchar(max)")]
     public required string Password { get; init; }
+
+    [Column("SuggestedCalories", TypeName = "int")]
+    public int SuggestedCalories { get; init; } = 2000;
 }
