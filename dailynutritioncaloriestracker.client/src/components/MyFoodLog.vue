@@ -9,10 +9,10 @@
       <!-- Import the nutrition component here -->
       <TodayNutritionSummary 
         :today-totals="todaySummary"
-        :suggested-calories="2456"
-        :suggested-carbs="246"
-        :suggested-fat="68"
-        :suggested-protein="215"
+        :suggested-calories="userProfile.suggestedCalories"
+        :suggested-carbs="Math.round(userProfile.suggestedCalories * 0.45 / 4)"
+        :suggested-fat="Math.round(userProfile.suggestedCalories * 0.25 / 9)"
+        :suggested-protein="Math.round(userProfile.suggestedCalories * 0.30 / 4)"
       />
       
       <!-- Keep existing summary cards below or remove them -->
@@ -109,6 +109,9 @@ const currentPage = ref(1)
 const itemsPerPage = 10
 const isLoading = ref(false)
 
+// User profile data
+const userProfile = ref({ suggestedCalories: 2456 })
+
 // Get current user from API service (same as App.vue)
 const currentUser = ref(api.getCurrentUser())
 const userId = currentUser.value?.id || '00000000-0000-0000-0000-000000000001'
@@ -192,6 +195,18 @@ const fetchFoodLogData = async () => {
   }
 }
 
+const fetchUserProfile = async () => {
+  // Fetch from backend API
+  const currentUser = api.getCurrentUser()
+  if (currentUser?.username) {
+    const response = await fetch(`/user/profile/${currentUser.username}`)
+    if (response.ok) {
+      const userData = await response.json()
+      userProfile.value.suggestedCalories = userData.suggestedCalories || 2456
+    }
+  }
+}
+
 const formatDate = (dateString) => {
   if (!dateString) return 'N/A'
   const date = new Date(dateString)
@@ -211,8 +226,9 @@ const nextPage = () => {
 }
 
 // Lifecycle
-onMounted(() => {
-  fetchFoodLogData()
+onMounted(async () => {
+  await fetchUserProfile()
+  await fetchFoodLogData()
 })
 </script>
 
