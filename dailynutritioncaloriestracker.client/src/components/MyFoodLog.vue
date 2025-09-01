@@ -288,13 +288,31 @@ onMounted(async () => {
 .food-log-table th,
 .food-log-table td {
   padding: 12px;
-  text-align: left;
+  text-align: center; /* CHANGE FROM 'left' TO 'center' */
   border-bottom: 1px solid #e0e0e0;
 }
 
-.food-log-table td:not(:first-child) {
-  text-align: right; /* Right-align numeric values */
+/* Remove this rule that was right-aligning numeric values */
+/* .food-log-table td:not(:first-child) {
+  text-align: right;
+} */
+
+/* If you want to keep the Date column left-aligned and only center the numeric columns: */
+.food-log-table td:first-child {
+  text-align: left; /* Keep date left-aligned */
 }
+
+.food-log-table td:not(:first-child) {
+  text-align: center; /* Center all numeric values */
+}
+
+/* Or if you want ALL columns centered, just use: */
+/* .food-log-table th,
+.food-log-table td {
+  padding: 12px;
+  text-align: center;
+  border-bottom: 1px solid #e0e0e0;
+} */
 
 .food-log-table th {
   background-color: #f8f9fa;
@@ -395,6 +413,7 @@ onMounted(async () => {
   font-size: 1.5rem;
   font-weight: 600;
   margin: 0;
+  text-align: center; /* ADD THIS LINE */
 }
 
 .history-container {
