@@ -1,8 +1,8 @@
 <template>
     <ul class="timeline">
-        <li v-for="(log, index) in logs" :key="log.date" class="timeline-entry">
+        <li v-for="(log, index) in logs" :key="log.id || log.dateTime" class="timeline-entry">
             <div class="card">
-                <h3>{{ log.dateTime.split('T')[0] }}</h3>
+                <h3>{{ formatDate(log.dateTime) }}</h3>
                 <p>Calories: {{ log.totalCalories }}</p>
                 <p>Carbs: {{ log.totalCarbs }}</p>
                 <p>Protein: {{ log.totalProtein }}</p>
@@ -15,39 +15,66 @@
 </template>
 
 <script>
-    export default {
-        name: 'FoodLog',
-        data() {
-            return {
-                logs: [],  // Start with an empty array or preloaded data if necessary
-                loading: false
-            };
+import api from '../services/api'
+
+export default {
+    name: 'FoodLog',
+    data() {
+        return {
+            logs: [],
+            loading: false
+        };
+    },
+    mounted() {
+        this.fetchData();
+    },
+    methods: {
+        fetchData() {
+            this.loading = true;
+            
+            // Get current user (same logic as MyFoodLog.vue)
+            const currentUser = api.getCurrentUser();
+            const userId = currentUser?.id || '00000000-0000-0000-0000-000000000001';
+            
+            console.log('FoodLog: Fetching for userId:', userId); // Debug log
+            
+            fetch(`foodlog/GetUserFoodLogs/${userId}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(json => {
+                    console.log('FoodLog: Raw API response:', json); // Debug log
+                    console.log('FoodLog: Number of items received:', json.length); // Debug log
+                    
+                    // Sort by date (newest first) and take only top 5
+                    const sortedLogs = json.sort((a, b) => 
+                        new Date(b.dateTime || b.createTime) - new Date(a.dateTime || a.createTime)
+                    );
+                    
+                    console.log('FoodLog: After sorting:', sortedLogs); // Debug log
+                    
+                    this.logs = sortedLogs.slice(0, 5); // Take only top 5 results
+                    
+                    console.log('FoodLog: Final logs to display:', this.logs); // Debug log
+                    console.log('FoodLog: Number of logs to display:', this.logs.length); // Debug log
+                    
+                    this.loading = false;
+                })
+                .catch(error => {
+                    console.error('There was a problem with the fetch operation:', error);
+                    this.loading = false;
+                });
         },
-        mounted() {
-            this.fetchData();  // Automatically fetch data when the component mounts
-        },
-        methods: {
-            fetchData() {
-                this.loading = true;
-                fetch('foodlog/GetFoodLogs')
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Network response was not ok');
-                        }
-                        return response.json();
-                    })
-                    .then(json => {
-                        // Assuming json is already an array with the correct structure
-                        this.logs = json;
-                        this.loading = false;
-                    })
-                    .catch(error => {
-                        console.error('There was a problem with the fetch operation:', error);
-                        this.loading = false;
-                    });
-            },
+        formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            const date = new Date(dateString);
+            return date.toLocaleDateString();
         }
-    };
+    }
+};
 </script>
 
 <style>
