@@ -87,16 +87,7 @@
 
       <main>
         <TheWelcome />
-        
-        <!-- Debug info -->
-        <div style="background: yellow; padding: 5px; margin: 10px; font-size: 12px;">
-          <strong>App.vue Debug Info:</strong><br>
-          User ID: {{ currentUser?.id || currentUser?.userId || 'NOT FOUND' }}<br>
-          Username: {{ currentUser?.username || 'NO USERNAME' }}<br>
-          Current User Object: {{ JSON.stringify(currentUser, null, 2) }}<br>
-          User properties: {{ Object.keys(currentUser || {}).join(', ') }}
-        </div>
-        
+
         <!-- Profile Page -->
         <div v-if="activeTab === 'profile'" class="profile-content">
           <ProfilePage @profile-updated="handleProfileUpdated" />
