@@ -3,6 +3,7 @@
     import TheWelcome from './components/TheWelcome.vue'
     import FoodLog from './components/FoodLog.vue'
     import ProfilePage from './components/ProfilePage.vue'
+    import NutritionManagement from './components/NutritionManagement.vue'
     import { ref } from 'vue'
     import { useRouter } from 'vue-router'
     import api from './services/api'
@@ -65,6 +66,11 @@
         <!-- Profile Page -->
         <div v-if="activeTab === 'profile'" class="profile-content">
           <ProfilePage @profile-updated="handleProfileUpdated" />
+        </div>
+        
+        <!-- Nutrition Management Page -->
+        <div v-else-if="activeTab === 'nutrition'" class="nutrition-content">
+          <NutritionManagement />
         </div>
         
         <!-- Main Content for other tabs -->
@@ -221,6 +227,15 @@ main {
 
 /* Profile Page specific styles */
 .profile-content {
+  padding-top: var(--header-height);
+  width: 100%;
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+/* Nutrition Management Page specific styles */
+.nutrition-content {
   padding-top: var(--header-height);
   width: 100%;
   max-width: var(--content-max-width);

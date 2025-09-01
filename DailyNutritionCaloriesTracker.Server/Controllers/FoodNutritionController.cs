@@ -26,6 +26,44 @@ public class FoodNutritionController : ControllerBase
         _mapper = mapper;
     }
 
+    // Add this new GET endpoint for nutrition management page
+    [HttpGet]
+    public async Task<IEnumerable<FoodNutritionDto>> GetAll()
+    {
+        MapperConfiguration dtoMapperConfig = new MapperConfiguration(cfg =>
+        {
+            cfg.AddProfile(new FoodNutritionDtoProfiler());
+            cfg.AddProfile(new FoodItemDtoProfiler());
+            cfg.AddProfile(new FoodLogDtoProfiler());
+            cfg.AddProfile(new UserDtoProfiler());
+        });
+
+        IMapper dtoMapper = dtoMapperConfig.CreateMapper();
+
+        IEnumerable<FoodNutritionEntity> entities = await _foodNutritionService.GetFoodNutritionAsync();
+
+        IEnumerable<FoodNutritionDto> entitieDtos = entities.Select(e => dtoMapper.Map<FoodNutritionDto>(e));
+
+        return entitieDtos;
+    }
+
+    // Add this new POST endpoint for adding food nutrition
+    [HttpPost]
+    public async Task<ActionResult<FoodNutritionDto>> Post([FromBody] FoodNutritionDto foodNutritionDto)
+    {
+        try
+        {
+            FoodNutritionEntity entity = MapDtoToEntity(foodNutritionDto);
+            await _foodNutritionService.AddFoodNutritionAsync(entity);
+            return Ok(foodNutritionDto);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error adding food nutrition");
+            return StatusCode(500, "Error adding food nutrition");
+        }
+    }
+
     [HttpGet("getlist")]
     public async Task<IEnumerable<FoodNutritionDto>> Get()
     {

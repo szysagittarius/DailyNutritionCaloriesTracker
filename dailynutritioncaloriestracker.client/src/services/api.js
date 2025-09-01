@@ -54,6 +54,76 @@ const api = {
   getCurrentUser() {
     const userStr = localStorage.getItem('user');
     return userStr ? JSON.parse(userStr) : null;
+  },
+
+  // Food Nutrition endpoints
+  async getFoodNutrition() {
+    const token = getAuthToken()
+    const response = await fetch(`${API_BASE_URL}/FoodNutrition`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    })
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch food nutrition data')
+    }
+    
+    return response.json()
+  },
+
+  async addFoodNutrition(nutritionData) {
+    const token = getAuthToken()
+    const response = await fetch(`${API_BASE_URL}/FoodNutrition`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(nutritionData)
+    })
+    
+    if (!response.ok) {
+      throw new Error('Failed to add food nutrition')
+    }
+    
+    return response.json()
+  },
+
+  // Generic methods for flexibility
+  async get(endpoint) {
+    const token = getAuthToken()
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    })
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch from ${endpoint}`)
+    }
+    
+    return response.json()
+  },
+
+  async post(endpoint, data) {
+    const token = getAuthToken()
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    })
+    
+    if (!response.ok) {
+      throw new Error(`Failed to post to ${endpoint}`)
+    }
+    
+    return response.json()
   }
 };
 
