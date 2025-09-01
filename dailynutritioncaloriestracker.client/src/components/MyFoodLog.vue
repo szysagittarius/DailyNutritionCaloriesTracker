@@ -5,6 +5,17 @@
     <!-- Summary Section -->
     <div class="summary-section">
       <h3>Today's Summary</h3>
+      
+      <!-- Import the nutrition component here -->
+      <TodayNutritionSummary 
+        :today-totals="todaySummary"
+        :suggested-calories="2456"
+        :suggested-carbs="246"
+        :suggested-fat="68"
+        :suggested-protein="215"
+      />
+      
+      <!-- Keep existing summary cards below or remove them -->
       <div class="summary-cards">
         <div class="summary-card">
           <h4>Total Calories</h4>
@@ -90,6 +101,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import api from '../services/api'
+import TodayNutritionSummary from './TodayNutritionSummary.vue'
 
 // Reactive data
 const foodLogItems = ref([])
@@ -119,6 +131,7 @@ const todaySummary = computed(() => {
     return itemDate === today
   })
   
+  // This sums up ALL today's food log entries
   return todayItems.reduce((summary, item) => {
     summary.calories += item.calories || 0
     summary.protein += item.protein || 0
