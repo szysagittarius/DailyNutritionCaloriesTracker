@@ -10,10 +10,9 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowViteDevServer",
         policy =>
         {
-            policy.WithOrigins("https://localhost:5173")
+             policy.AllowAnyOrigin()
                   .AllowAnyMethod()
-                  .AllowAnyHeader()
-                  .AllowCredentials();
+                  .AllowAnyHeader();
         });
 });
 
@@ -37,23 +36,23 @@ builder.Services.AddSwaggerGen();
 
 WebApplication app = builder.Build();
 
-app.UseDefaultFiles();
-app.UseStaticFiles();
-
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-    app.UseCors("AllowViteDevServer");
 }
 
+app.UseCors("AllowViteDevServer");  // ← Keep this early
+// Remove or comment out these lines temporarily:
+// app.UseDefaultFiles();
+// app.UseStaticFiles();
+
 app.UseHttpsRedirection();
-
 app.UseAuthorization();
-
 app.MapControllers();
 
-app.MapFallbackToFile("/index.html");
+// Comment this out too for testing:
+// app.MapFallbackToFile("/index.html");
 
 app.Run();

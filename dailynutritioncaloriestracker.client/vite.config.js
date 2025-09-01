@@ -16,8 +16,15 @@ const certificateName = "dailynutritioncaloriestracker.client";
 const certFilePath = path.join(baseFolder, `${certificateName}.pem`);
 const keyFilePath = path.join(baseFolder, `${certificateName}.key`);
 
+// Create certificate directory if it doesn't exist
+if (!fs.existsSync(baseFolder)) {
+    fs.mkdirSync(baseFolder, { recursive: true });
+}
+
+// Try to create certificate if it doesn't exist
 if (!fs.existsSync(certFilePath) || !fs.existsSync(keyFilePath)) {
-    if (0 !== child_process.spawnSync('dotnet', [
+    console.log('Creating development certificate...');
+    const result = child_process.spawnSync('dotnet', [
         'dev-certs',
         'https',
         '--export-path',
@@ -25,9 +32,14 @@ if (!fs.existsSync(certFilePath) || !fs.existsSync(keyFilePath)) {
         '--format',
         'Pem',
         '--no-password',
-    ], { stdio: 'inherit', }).status) {
-        throw new Error("Could not create certificate.");
+    ], { stdio: 'pipe' });
+    
+    if (result.status !== 0) {
+        console.error('Failed to create certificate:', result.stderr?.toString());
+        console.log('You may need to run: dotnet dev-certs https --trust');
+        process.exit(1);
     }
+    console.log('Certificate created successfully!');
 }
 
 const target = env.ASPNETCORE_HTTPS_PORT ? `https://localhost:${env.ASPNETCORE_HTTPS_PORT}` :
