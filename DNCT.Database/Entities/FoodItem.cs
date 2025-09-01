@@ -4,24 +4,24 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace NT.Database.Entities;
 
 [Table("FoodItems")]
-public record FoodItem
+public class FoodItem  // Changed from 'record' to 'class'
 {
     [Key]
     [Column("Id", TypeName = "uniqueidentifier")]
-    public required Guid Id { get; init; }
+    public Guid Id { get; set; }  // Changed from 'required' and 'init' to regular setter
 
     [ForeignKey("FoodNutrition")]
     [Column("FoodNutritionId", TypeName = "uniqueidentifier")]
-    public required Guid FoodNutritionId { get; init; }
+    public Guid FoodNutritionId { get; set; }  // Changed from 'required' and 'init'
 
-    public required FoodNutrition FoodNutrition { get; init; }
+    public virtual FoodNutrition? FoodNutrition { get; set; }  // Removed 'required', added 'virtual' and nullable
 
     [Column("Unit", TypeName = "int")]
-    public required int Unit { get; init; }
+    public int Unit { get; set; }  // Changed from 'required' and 'init'
 
     [ForeignKey("FoodLog")]
     [Column("FoodLogId", TypeName = "uniqueidentifier")]
-    public required Guid FoodLogId { get; init; }
+    public Guid FoodLogId { get; set; }  // Changed from 'required' and 'init'
 
-    public required FoodLog FoodLog { get; init; }
+    public virtual FoodLog? FoodLog { get; set; }  // Removed 'required', added 'virtual' and nullable
 }

@@ -1,31 +1,34 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace NT.Database.Entities;
 
 [Table("FoodNutritions")]
-public record class FoodNutrition
+public class FoodNutrition  // Changed from 'record class' to 'class'
 {
+    [Key]
     [Column("Id")]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    public required Guid Id { get; set; }
+    public Guid Id { get; set; }  // Changed from 'required' and 'init'
 
     [Column("Name")]
-    public required string Name { get; set; }
+    public string Name { get; set; } = string.Empty;  // Changed from 'required' and 'init'
 
     [Column("Measurement")]
-    public required string Measurement { get; set; }
+    public string Measurement { get; set; } = string.Empty;  // Changed from 'required' and 'init'
 
     [Column("Carbs")]
-    public required double Carbs { get; set; }
+    public double Carbs { get; set; }  // Changed from 'required' and 'init'
 
     [Column("Fat")]
-    public required double Fat { get; set; }
+    public double Fat { get; set; }  // Changed from 'required' and 'init'
 
     [Column("Protein")]
-    public required double Protein { get; set; }
+    public double Protein { get; set; }  // Changed from 'required' and 'init'
 
     [Column("Calories")]
-    public required double Calories { get; set; }
+    public double Calories { get; set; }  // Changed from 'required' and 'init'
 
-
+    // Navigation property
+    public virtual ICollection<FoodItem> FoodItems { get; set; } = new List<FoodItem>();
 }

@@ -4,21 +4,24 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace NT.Database.Entities;
 
 [Table("Users")]
-public record User
+public class User  // Changed from 'record' to 'class'
 {
     [Key]
     [Column("Id", TypeName = "uniqueidentifier")]
-    public required Guid Id { get; init; }
+    public Guid Id { get; set; }  // Changed from 'required' and 'init' to regular setter
 
     [Column("Name", TypeName = "nvarchar(max)")]
-    public required string Name { get; init; }
+    public string Name { get; set; } = string.Empty;  // Changed from 'required' and 'init'
 
     [Column("Email", TypeName = "nvarchar(max)")]
-    public required string Email { get; init; }
+    public string Email { get; set; } = string.Empty;  // Changed from 'required' and 'init'
 
     [Column("Password", TypeName = "nvarchar(max)")]
-    public required string Password { get; init; }
+    public string Password { get; set; } = string.Empty;  // Changed from 'required' and 'init'
 
     [Column("SuggestedCalories", TypeName = "int")]
-    public int SuggestedCalories { get; init; } = 2000;
+    public int SuggestedCalories { get; set; } = 2000;  // Changed from 'init'
+
+    // Navigation property
+    public virtual ICollection<FoodLog> FoodLogs { get; set; } = new List<FoodLog>();
 }

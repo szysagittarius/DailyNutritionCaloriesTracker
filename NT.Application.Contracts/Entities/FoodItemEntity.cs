@@ -5,5 +5,8 @@ public class FoodItemEntity : EntityBase
     public int Unit { get; set; }
     public Guid FoodLogId { get; set; }
 
+    // Add navigation property to FoodNutrition
+    public FoodNutritionEntity FoodNutrition { get; set; }
+
     // Additional methods to manipulate and query the food item
 }

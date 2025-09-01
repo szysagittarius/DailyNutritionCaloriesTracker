@@ -4,29 +4,40 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace NT.Database.Entities;
 
 [Table("FoodLogs")]
-public record FoodLog
+public class FoodLog  // Changed from 'record' to 'class'
 {
     [Key]
     [Column("Id", TypeName = "uniqueidentifier")]
-    public required Guid Id { get; init; }
-
+    public Guid Id { get; set; }  // Changed from 'required' and 'init'
 
     [Column("DateTime", TypeName = "datetime")]
-    public required DateTime DateTime { get; init; }
+    public DateTime DateTime { get; set; }  // Changed from 'required' and 'init'
 
     [Column("CreateTime", TypeName = "datetime")]
-    public required DateTime CreateTime { get; init; }
+    public DateTime CreateTime { get; set; }  // Changed from 'required' and 'init'
 
     [Column("UpdateTime", TypeName = "datetime")]
-    public required DateTime UpdateTime { get; init; }
+    public DateTime UpdateTime { get; set; }  // Changed from 'required' and 'init'
 
     [ForeignKey("User")]
     [Column("UserId", TypeName = "uniqueidentifier")]
-    public required Guid UserId { get; init; }
+    public Guid UserId { get; set; }  // Changed from 'required' and 'init'
 
-    public required User User { get; init; }
+    // Navigation properties
+    public virtual User? User { get; set; }  // Changed from 'required' and 'init', made nullable
 
+    public virtual ICollection<FoodItem> FoodItems { get; set; } = new List<FoodItem>();  // Changed from 'init'
 
-    public IEnumerable<FoodItem> FoodItems { get; init; } = Enumerable.Empty<FoodItem>();
+    // Add calculated properties for totals
+    [Column("TotalCalories", TypeName = "float")]
+    public double TotalCalories { get; set; }
 
+    [Column("TotalCarbs", TypeName = "float")]
+    public double TotalCarbs { get; set; }
+
+    [Column("TotalProtein", TypeName = "float")]
+    public double TotalProtein { get; set; }
+
+    [Column("TotalFat", TypeName = "float")]
+    public double TotalFat { get; set; }
 }

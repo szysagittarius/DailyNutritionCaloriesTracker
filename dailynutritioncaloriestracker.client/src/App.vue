@@ -2,6 +2,7 @@
     import NutritionTracker from './components/NutritionTracker.vue'
     import TheWelcome from './components/TheWelcome.vue'
     import FoodLog from './components/FoodLog.vue'
+    import FoodLogPage from './components/FoodLogPage.vue'
     import ProfilePage from './components/ProfilePage.vue'
     import NutritionManagement from './components/NutritionManagement.vue'
     import { ref } from 'vue'
@@ -73,7 +74,12 @@
           <NutritionManagement />
         </div>
         
-        <!-- Main Content for other tabs -->
+        <!-- Food Log Page -->
+        <div v-else-if="activeTab === 'foodlog'" class="food-log-content">
+          <FoodLogPage />
+        </div>
+        
+        <!-- Main Content for home tab -->
         <div v-else class="main-content">
           <div class="left-panel">
             <NutritionTracker 
@@ -236,6 +242,15 @@ main {
 
 /* Nutrition Management Page specific styles */
 .nutrition-content {
+  padding-top: var(--header-height);
+  width: 100%;
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+/* Food Log Page specific styles */
+.food-log-content {
   padding-top: var(--header-height);
   width: 100%;
   max-width: var(--content-max-width);

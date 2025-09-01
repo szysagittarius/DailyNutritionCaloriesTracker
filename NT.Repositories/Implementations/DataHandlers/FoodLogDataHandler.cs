@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.EntityFrameworkCore; // ADD THIS LINE
 using NT.Application.Contracts.Entities;
 using NT.Application.Contracts.Ports;
 using NT.Database.Entities;
@@ -25,24 +26,25 @@ public class FoodLogDataHandler : IFoodLogDataHandler
 
     public async Task DeleteAsync(Guid id)
     {
-        await _foodLogRepository.DeleteAsync(id); // Example conversion, adjust based on actual ID handling
+        await _foodLogRepository.DeleteAsync(id);
     }
 
     public async Task<FoodLogEntity> GetAsync(Guid id)
     {
-        FoodLog foodLog = await _foodLogRepository.GetByIdAsync(id); // Adjust ID conversion as necessary
+        FoodLog foodLog = await _foodLogRepository.GetByIdAsync(id);
         return _mapper.Map<FoodLogEntity>(foodLog);
     }
 
+    // NO CHANGES NEEDED - Will now automatically get FoodItems because repository includes them
     public async Task<IEnumerable<FoodLogEntity>> GetAllAsync()
     {
         List<FoodLog> foodLogs = await Task.FromResult(_foodLogRepository.GetAll().ToList());
         return _mapper.Map<IEnumerable<FoodLogEntity>>(foodLogs);
     }
 
+    // NO CHANGES NEEDED - Will now automatically get FoodItems when filtering
     public async Task<IEnumerable<FoodLogEntity>> GetAllAsync(Guid userId)
     {
-        // Assuming there's a way to filter by userId in your repository
         List<FoodLog> foodLogs = _foodLogRepository.GetAll().Where(f => f.UserId == userId).ToList();
         return await Task.FromResult(_mapper.Map<IEnumerable<FoodLogEntity>>(foodLogs));
     }

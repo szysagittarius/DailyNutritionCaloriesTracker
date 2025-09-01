@@ -1,6 +1,7 @@
 ﻿namespace NT.Application.Contracts.Entities;
 public class FoodLogEntity
 {
+    public Guid Id { get; set; } // Required for Entity Framework
     public double TotalCalories { get; set; }
     public double TotalCarbs { get; set; }
     public double TotalProtein { get; set; }
@@ -11,8 +12,7 @@ public class FoodLogEntity
     public DateTime DateTime { get; set; }
     public DateTime CreateTime { get; set; }
     public DateTime UpdateTime { get; set; }
-    public IEnumerable<FoodItemEntity> FoodItems { get; set; } = new List<FoodItemEntity>(); // Assuming FoodItem is also refactored to a domain model
-
-
-
+    
+    // CHANGE: Use ICollection instead of IEnumerable for Entity Framework navigation properties
+    public ICollection<FoodItemEntity> FoodItems { get; set; } = new List<FoodItemEntity>();
 }
