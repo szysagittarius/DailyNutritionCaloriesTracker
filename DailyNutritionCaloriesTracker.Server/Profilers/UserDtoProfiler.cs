@@ -8,6 +8,16 @@ public class UserDtoProfiler : Profile
 {
     public UserDtoProfiler()
     {
-        CreateMap<UserEntity, UserDto>().ReverseMap();
+        CreateMap<UserEntity, UserDto>()
+            .ForMember(dest => dest.SuggestedCalories, opt => opt.MapFrom(src => src.SuggestedCalories))
+            .ForMember(dest => dest.SuggestedCarbs, opt => opt.MapFrom(src => src.SuggestedCarbs))
+            .ForMember(dest => dest.SuggestedFat, opt => opt.MapFrom(src => src.SuggestedFat))
+            .ForMember(dest => dest.SuggestedProtein, opt => opt.MapFrom(src => src.SuggestedProtein));
+
+        CreateMap<UserDto, UserEntity>()
+            .ForMember(dest => dest.SuggestedCalories, opt => opt.MapFrom(src => src.SuggestedCalories))
+            .ForMember(dest => dest.SuggestedCarbs, opt => opt.MapFrom(src => src.SuggestedCarbs))
+            .ForMember(dest => dest.SuggestedFat, opt => opt.MapFrom(src => src.SuggestedFat))
+            .ForMember(dest => dest.SuggestedProtein, opt => opt.MapFrom(src => src.SuggestedProtein));
     }
 }

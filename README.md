@@ -40,6 +40,12 @@ just need to clean up the migration folder under Database, then run the command 
 cd DailyNutritionCaloriesTracker.Server
 DailyNutritionCaloriesTracker\DailyNutritionCaloriesTracker.Server> dotnet ef migrations add InitialCreate --project ..\DNCT.Database\NT.Ef.Database.csproj
 
+in future update, once there is db update, run sth like
+cd DailyNutritionCaloriesTracker.Server
+dotnet ef migrations add AddNutritionGoalsToUsers --project ..\DNCT.Database\NT.Ef.Database.csproj
+
+
+lastly, 
 need to update appsetting.development.json, then run this command
 cd DailyNutritionCaloriesTracker.Server
 DailyNutritionCaloriesTracker\DailyNutritionCaloriesTracker.Server> dotnet ef database update --project ..\DNCT.Database\NT.Ef.Database.csproj

@@ -10,9 +10,9 @@
       <TodayNutritionSummary 
         :today-totals="todaySummary"
         :suggested-calories="userProfile.suggestedCalories"
-        :suggested-carbs="Math.round(userProfile.suggestedCalories * 0.45 / 4)"
-        :suggested-fat="Math.round(userProfile.suggestedCalories * 0.25 / 9)"
-        :suggested-protein="Math.round(userProfile.suggestedCalories * 0.30 / 4)"
+        :suggested-carbs="userProfile.suggestedCarbs"
+        :suggested-fat="userProfile.suggestedFat"
+        :suggested-protein="userProfile.suggestedProtein"
       />
       
       <!-- Keep existing summary cards below or remove them -->
@@ -110,7 +110,12 @@ const itemsPerPage = 10
 const isLoading = ref(false)
 
 // User profile data
-const userProfile = ref({ suggestedCalories: 2456 })
+const userProfile = ref({
+  suggestedCalories: 2456,
+  suggestedCarbs: 246,
+  suggestedFat: 68,
+  suggestedProtein: 215
+})
 
 // Get current user from API service (same as App.vue)
 const currentUser = ref(api.getCurrentUser())
@@ -196,14 +201,19 @@ const fetchFoodLogData = async () => {
 }
 
 const fetchUserProfile = async () => {
-  // Fetch from backend API
-  const currentUser = api.getCurrentUser()
-  if (currentUser?.username) {
-    const response = await fetch(`/user/profile/${currentUser.username}`)
-    if (response.ok) {
-      const userData = await response.json()
-      userProfile.value.suggestedCalories = userData.suggestedCalories || 2456
+  try {
+    if (currentUser.value?.username) {
+      const response = await fetch(`/user/profile/${currentUser.value.username}`)
+      if (response.ok) {
+        const profile = await response.json()
+        userProfile.value.suggestedCalories = profile.suggestedCalories || 2456
+        userProfile.value.suggestedCarbs = profile.suggestedCarbs || 246
+        userProfile.value.suggestedFat = profile.suggestedFat || 68
+        userProfile.value.suggestedProtein = profile.suggestedProtein || 215
+      }
     }
+  } catch (error) {
+    console.error('Error fetching user profile:', error)
   }
 }
 

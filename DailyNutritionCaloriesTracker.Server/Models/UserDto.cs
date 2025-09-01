@@ -2,8 +2,12 @@
 
 public class UserDto
 {
-    public required string Name { get; set; }
-    public required string Email { get; set; }
-    public required string Password { get; set; }
-
+    public Guid Id { get; set; }
+    public string Name { get; set; }
+    public string Email { get; set; }
+    public string Password { get; set; }
+    public int SuggestedCalories { get; set; }
+    public int SuggestedCarbs { get; set; }      // ADD THIS
+    public int SuggestedFat { get; set; }        // ADD THIS
+    public int SuggestedProtein { get; set; }    // ADD THIS
 }

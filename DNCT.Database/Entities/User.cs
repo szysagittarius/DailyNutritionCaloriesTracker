@@ -22,6 +22,15 @@ public class User  // Changed from 'record' to 'class'
     [Column("SuggestedCalories", TypeName = "int")]
     public int SuggestedCalories { get; set; } = 2000;  // Changed from 'init'
 
+    [Column("SuggestedCarbs", TypeName = "int")]
+    public int SuggestedCarbs { get; set; } = 246;  // ADD THIS
+
+    [Column("SuggestedFat", TypeName = "int")]
+    public int SuggestedFat { get; set; } = 68;  // ADD THIS
+
+    [Column("SuggestedProtein", TypeName = "int")]
+    public int SuggestedProtein { get; set; } = 215;  // ADD THIS
+
     // Navigation property
     public virtual ICollection<FoodLog> FoodLogs { get; set; } = new List<FoodLog>();
 }

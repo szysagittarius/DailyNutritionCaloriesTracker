@@ -19,14 +19,51 @@
                   v-model.number="profile.suggestedCalories"
                   type="number"
                   class="form-input calorie-input"
-                  min="1000"
-                  max="5000"
-                  step="50"
-                  required
                 />
                 <span class="calorie-unit">calories</span>
               </div>
-              <small class="form-help">Recommended range: 1000-5000 calories per day</small>
+            </div>
+            
+            <!-- New nutrition goal input fields (without validation attributes) -->
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="suggestedCarbs" class="form-label">Daily Carbs Goal</label>
+                <div class="macro-input-container">
+                  <input
+                    id="suggestedCarbs"
+                    v-model.number="profile.suggestedCarbs"
+                    type="number"
+                    class="form-input macro-input"
+                  />
+                  <span class="macro-unit">g</span>
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label for="suggestedProtein" class="form-label">Daily Protein Goal</label>
+                <div class="macro-input-container">
+                  <input
+                    id="suggestedProtein"
+                    v-model.number="profile.suggestedProtein"
+                    type="number"
+                    class="form-input macro-input"
+                  />
+                  <span class="macro-unit">g</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="suggestedFat" class="form-label">Daily Fat Goal</label>
+              <div class="macro-input-container">
+                <input
+                  id="suggestedFat"
+                  v-model.number="profile.suggestedFat"
+                  type="number"
+                  class="form-input macro-input"
+                />
+                <span class="macro-unit">g</span>
+              </div>
             </div>
           </div>
 
@@ -103,7 +140,10 @@ export default {
         name: '',
         email: '',
         password: '',
-        suggestedCalories: 2456
+        suggestedCalories: 2456,
+        suggestedCarbs: 246,      // ADD THIS
+        suggestedFat: 68,         // ADD THIS
+        suggestedProtein: 215     // ADD THIS
       },
       isSaving: false,
       successMessage: '',
@@ -118,9 +158,17 @@ export default {
       try {
         const currentUser = api.getCurrentUser()
         if (currentUser) {
-          // Load user data from API or localStorage
-          this.profile.name = currentUser.username || ''
-          this.profile.email = currentUser.email || ''
+          const response = await fetch(`/user/profile/${currentUser.username}`)
+          
+          if (response.ok) {
+            const userData = await response.json()
+            this.profile.name = userData.name || currentUser.username || ''
+            this.profile.email = userData.email || ''
+            this.profile.suggestedCalories = userData.suggestedCalories || 2456
+            this.profile.suggestedCarbs = userData.suggestedCarbs || 246          // ADD THIS
+            this.profile.suggestedFat = userData.suggestedFat || 68               // ADD THIS
+            this.profile.suggestedProtein = userData.suggestedProtein || 215      // ADD THIS
+          }
           // You might want to fetch more user data from the backend here
         }
       } catch (error) {
@@ -308,6 +356,24 @@ export default {
 }
 
 .calorie-unit {
+  font-weight: 500;
+  color: #666;
+  font-size: 1rem;
+}
+
+.macro-input-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.macro-input {
+  flex: 1;
+  max-width: 180px;
+}
+
+.macro-unit {
   font-weight: 500;
   color: #666;
   font-size: 1rem;

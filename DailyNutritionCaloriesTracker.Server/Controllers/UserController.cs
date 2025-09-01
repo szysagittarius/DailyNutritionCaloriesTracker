@@ -48,7 +48,15 @@ public class UserController : ControllerBase
     public async Task<IActionResult> PostAsync([FromBody] UserDto userDto)
     {
         //insert the UserDto to the database by calling the service
-        UserEntity entity = new UserEntity { Name = userDto.Name, Email = userDto.Email, Password = userDto.Password };
+        UserEntity entity = new UserEntity { 
+            Name = userDto.Name, 
+            Email = userDto.Email, 
+            Password = userDto.Password,
+            SuggestedCalories = userDto.SuggestedCalories,
+            SuggestedCarbs = userDto.SuggestedCarbs,         // ADD THIS
+            SuggestedFat = userDto.SuggestedFat,             // ADD THIS
+            SuggestedProtein = userDto.SuggestedProtein      // ADD THIS
+        };
         await _userService.AddAsync(entity);
         return Ok(new { message = "User created successfully" });
     }
@@ -109,6 +117,9 @@ public class UserController : ControllerBase
             existingUser.Name = updateProfileDto.Name;
             existingUser.Email = updateProfileDto.Email;
             existingUser.SuggestedCalories = updateProfileDto.SuggestedCalories;
+            existingUser.SuggestedCarbs = updateProfileDto.SuggestedCarbs;         // ADD THIS
+            existingUser.SuggestedFat = updateProfileDto.SuggestedFat;             // ADD THIS
+            existingUser.SuggestedProtein = updateProfileDto.SuggestedProtein;     // ADD THIS
             
             // Only update password if provided
             if (!string.IsNullOrEmpty(updateProfileDto.Password))
@@ -124,7 +135,10 @@ public class UserController : ControllerBase
                 user = new {
                     name = result.Name,
                     email = result.Email,
-                    suggestedCalories = result.SuggestedCalories
+                    suggestedCalories = result.SuggestedCalories,
+                    suggestedCarbs = result.SuggestedCarbs,         // ADD THIS
+                    suggestedFat = result.SuggestedFat,             // ADD THIS
+                    suggestedProtein = result.SuggestedProtein      // ADD THIS
                 }
             });
         }
@@ -151,7 +165,10 @@ public class UserController : ControllerBase
             return Ok(new {
                 name = user.Name,
                 email = user.Email,
-                suggestedCalories = user.SuggestedCalories
+                suggestedCalories = user.SuggestedCalories,
+                suggestedCarbs = user.SuggestedCarbs,         // ADD THIS
+                suggestedFat = user.SuggestedFat,             // ADD THIS
+                suggestedProtein = user.SuggestedProtein      // ADD THIS
             });
         }
         catch (Exception ex)
