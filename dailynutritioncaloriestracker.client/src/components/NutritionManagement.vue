@@ -2,56 +2,6 @@
   <div class="nutrition-management">
     <h2>Food Nutrition Management</h2>
     
-    <!-- Food Nutrition Table -->
-    <div class="table-section">
-      <h3>Food Nutrition Database</h3>
-      <div class="table-container">
-        <table class="nutrition-table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Measurement</th>
-              <th>Carbs (g)</th>
-              <th>Fat (g)</th>
-              <th>Protein (g)</th>
-              <th>Calories</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="item in paginatedItems" :key="item.id">
-              <td>{{ item.name }}</td>
-              <td>{{ item.measurement }}</td>
-              <td>{{ item.carbs }}</td>
-              <td>{{ item.fat }}</td>
-              <td>{{ item.protein }}</td>
-              <td>{{ item.calories }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      
-      <!-- Pagination -->
-      <div class="pagination">
-        <button 
-          @click="previousPage" 
-          :disabled="currentPage === 1"
-          class="pagination-btn"
-        >
-          Previous
-        </button>
-        <span class="page-info">
-          Page {{ currentPage }} of {{ totalPages }}
-        </span>
-        <button 
-          @click="nextPage" 
-          :disabled="currentPage === totalPages"
-          class="pagination-btn"
-        >
-          Next
-        </button>
-      </div>
-    </div>
-
     <!-- Add New Food Nutrition Form -->
     <div class="form-section">
       <h3>Add New Food Nutrition</h3>
@@ -141,6 +91,58 @@
           </button>
         </div>
       </form>
+    </div>
+
+    <!-- Food Nutrition Table -->
+    <div class="table-section">
+      <div class="database-container">
+        <h3>Food Nutrition Database</h3>
+        <div class="table-container">
+          <table class="nutrition-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Measurement</th>
+                <th>Carbs (g)</th>
+                <th>Fat (g)</th>
+                <th>Protein (g)</th>
+                <th>Calories</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="item in paginatedItems" :key="item.id">
+                <td>{{ item.name }}</td>
+                <td>{{ item.measurement }}</td>
+                <td>{{ item.carbs }}</td>
+                <td>{{ item.fat }}</td>
+                <td>{{ item.protein }}</td>
+                <td>{{ item.calories }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <!-- Pagination -->
+        <div class="pagination">
+          <button 
+            @click="previousPage" 
+            :disabled="currentPage === 1"
+            class="pagination-btn"
+          >
+            Previous
+          </button>
+          <span class="page-info">
+            Page {{ currentPage }} of {{ totalPages }}
+          </span>
+          <button 
+            @click="nextPage" 
+            :disabled="currentPage === totalPages"
+            class="pagination-btn"
+          >
+            Next
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -285,11 +287,26 @@ onMounted(() => {
   font-size: 1.5rem;
 }
 
-.table-container {
-  overflow-x: auto;
+.database-container {
   background: white;
+  padding: 2rem;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.database-container h3 {
+  color: #34495e;
+  margin-bottom: 1.5rem;
+  margin-top: 0;
+  font-size: 1.5rem;
+}
+
+.table-container {
+  overflow-x: auto;
+  background: transparent;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  margin-bottom: 1.5rem;
 }
 
 .nutrition-table {

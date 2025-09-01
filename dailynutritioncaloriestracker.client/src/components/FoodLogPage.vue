@@ -2,64 +2,6 @@
   <div class="food-log-management">
     <h2>Food Log Management</h2>
     
-    <!-- Food Log Table -->
-    <div class="table-section">
-      <h3>Your Food Log History</h3>
-      <div class="table-container">
-        <table class="food-log-table">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Calories</th>
-              <th>Protein (g)</th>
-              <th>Carbs (g)</th>
-              <th>Fat (g)</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="item in paginatedItems" :key="item.id">
-              <td>{{ formatDate(item.dateLogged) }}</td>
-              <td>{{ item.calories.toFixed(1) }}</td>
-              <td>{{ item.protein.toFixed(1) }}</td>
-              <td>{{ item.carbs.toFixed(1) }}</td>
-              <td>{{ item.fat.toFixed(1) }}</td>
-            </tr>
-          </tbody>
-        </table>
-        
-        <!-- Empty state -->
-        <div v-if="foodLogItems.length === 0 && !isLoading" class="empty-state">
-          <p>No food log entries found.</p>
-        </div>
-        
-        <!-- Loading state -->
-        <div v-if="isLoading" class="loading-state">
-          <p>Loading food log data...</p>
-        </div>
-      </div>
-      
-      <!-- Pagination -->
-      <div class="pagination" v-if="totalPages > 1">
-        <button 
-          @click="previousPage" 
-          :disabled="currentPage === 1"
-          class="pagination-btn"
-        >
-          Previous
-        </button>
-        <span class="page-info">
-          Page {{ currentPage }} of {{ totalPages }}
-        </span>
-        <button 
-          @click="nextPage" 
-          :disabled="currentPage === totalPages"
-          class="pagination-btn"
-        >
-          Next
-        </button>
-      </div>
-    </div>
-
     <!-- Summary Section -->
     <div class="summary-section">
       <h3>Today's Summary</h3>
@@ -79,6 +21,66 @@
         <div class="summary-card">
           <h4>Fat</h4>
           <p class="summary-value">{{ todaySummary.fat.toFixed(1) }}g</p>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Food Log Table -->
+    <div class="table-section">
+      <div class="history-container">
+        <h3>Your Food Log History</h3>
+        <div class="table-container">
+          <table class="food-log-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Calories</th>
+                <th>Protein (g)</th>
+                <th>Carbs (g)</th>
+                <th>Fat (g)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="item in paginatedItems" :key="item.id">
+                <td>{{ formatDate(item.dateLogged) }}</td>
+                <td>{{ item.calories.toFixed(1) }}</td>
+                <td>{{ item.protein.toFixed(1) }}</td>
+                <td>{{ item.carbs.toFixed(1) }}</td>
+                <td>{{ item.fat.toFixed(1) }}</td>
+              </tr>
+            </tbody>
+          </table>
+          
+          <!-- Empty state -->
+          <div v-if="foodLogItems.length === 0 && !isLoading" class="empty-state">
+            <p>No food log entries found.</p>
+          </div>
+          
+          <!-- Loading state -->
+          <div v-if="isLoading" class="loading-state">
+            <p>Loading food log data...</p>
+          </div>
+        </div>
+        
+        <!-- Pagination -->
+        <div class="pagination" v-if="totalPages > 1">
+          <button 
+            @click="previousPage" 
+            :disabled="currentPage === 1"
+            class="pagination-btn"
+          >
+            Previous
+          </button>
+          <span class="page-info">
+            Page {{ currentPage }} of {{ totalPages }}
+          </span>
+          <button 
+            @click="nextPage" 
+            :disabled="currentPage === totalPages"
+            class="pagination-btn"
+          >
+            Next
+          </button>
         </div>
       </div>
     </div>
@@ -212,17 +214,19 @@ onMounted(() => {
 /* Make sure the table container uses full width */
 .table-container {
   overflow-x: auto;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  margin-bottom: 2rem;
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  margin-bottom: 1.5rem;
   width: 100%; /* Ensure full width */
 }
 
 .food-log-table {
   width: 100%;
   border-collapse: collapse;
-  /* Don't set min-width too high */
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
 .food-log-management h2 {
@@ -352,6 +356,20 @@ onMounted(() => {
   font-size: 1.5rem;
   font-weight: 600;
   margin: 0;
+}
+
+.history-container {
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.history-container h3 {
+  color: #34495e;
+  margin-bottom: 1.5rem;
+  margin-top: 0;
+  font-size: 1.5rem;
 }
 
 @media (max-width: 768px) {

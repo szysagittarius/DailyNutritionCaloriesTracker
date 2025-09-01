@@ -8,6 +8,28 @@
     <div class="profile-content">
       <div class="profile-card">
         <form @submit.prevent="saveProfile" class="profile-form">
+          <!-- Nutrition Goals Section -->
+          <div class="form-section">
+            <h3 class="section-title">Nutrition Goals</h3>
+            <div class="form-group">
+              <label for="suggestedCalories" class="form-label">Daily Calorie Goal</label>
+              <div class="calorie-input-container">
+                <input
+                  id="suggestedCalories"
+                  v-model.number="profile.suggestedCalories"
+                  type="number"
+                  class="form-input calorie-input"
+                  min="1000"
+                  max="5000"
+                  step="50"
+                  required
+                />
+                <span class="calorie-unit">calories</span>
+              </div>
+              <small class="form-help">Recommended range: 1000-5000 calories per day</small>
+            </div>
+          </div>
+
           <!-- Personal Information Section -->
           <div class="form-section">
             <h3 class="section-title">Personal Information</h3>
@@ -44,28 +66,6 @@
                 class="form-input"
                 placeholder="Enter new password"
               />
-            </div>
-          </div>
-
-          <!-- Nutrition Goals Section -->
-          <div class="form-section">
-            <h3 class="section-title">Nutrition Goals</h3>
-            <div class="form-group">
-              <label for="suggestedCalories" class="form-label">Daily Calorie Goal</label>
-              <div class="calorie-input-container">
-                <input
-                  id="suggestedCalories"
-                  v-model.number="profile.suggestedCalories"
-                  type="number"
-                  class="form-input calorie-input"
-                  min="1000"
-                  max="5000"
-                  step="50"
-                  required
-                />
-                <span class="calorie-unit">calories</span>
-              </div>
-              <small class="form-help">Recommended range: 1000-5000 calories per day</small>
             </div>
           </div>
 
@@ -178,6 +178,8 @@ export default {
 <style scoped>
 .profile-container {
   padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .profile-header {
@@ -202,15 +204,19 @@ export default {
 .profile-content {
   display: flex;
   justify-content: center;
+  align-items: flex-start;
+  min-height: calc(100vh - 200px);
+  width: 100%;
 }
 
 .profile-card {
   background: white;
   border-radius: 16px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  padding: 50px; /* Increased from likely 20px */
+  padding: 50px;
   width: 100%;
-  max-width: 700px; /* Increased from likely 400px */
+  max-width: 700px;
+  margin: 0 auto;
 }
 
 @media (max-width: 768px) {
@@ -292,12 +298,13 @@ export default {
 .calorie-input-container {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 15px;
 }
 
 .calorie-input {
   flex: 1;
-  max-width: 180px; /* Slightly smaller */
+  max-width: 180px;
 }
 
 .calorie-unit {
