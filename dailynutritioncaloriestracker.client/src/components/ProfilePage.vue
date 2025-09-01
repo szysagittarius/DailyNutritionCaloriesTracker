@@ -177,11 +177,7 @@ export default {
 
 <style scoped>
 .profile-container {
-  max-width: 900px; /* Increased from likely 400px */
-  margin: 0 auto;
-  padding: 20px;
-  min-height: 100vh;
-  background-color: #f8f9fa;
+  padding: 2rem;
 }
 
 .profile-header {

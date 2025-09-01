@@ -266,8 +266,6 @@ onMounted(() => {
 <style scoped>
 .nutrition-management {
   padding: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
 }
 
 .nutrition-management h2 {

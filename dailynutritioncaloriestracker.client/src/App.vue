@@ -156,7 +156,8 @@ body {
 }
 
 :root {
-  --content-max-width: 1200px;
+  --content-max-width: 1200px; /* For home tab */
+  --data-page-max-width: 1600px; /* For data pages - wider */
   --header-height: 64px;
   --gap: 1.5rem;
 }
@@ -185,7 +186,7 @@ header {
   box-sizing: border-box;
 }
 
-/* Tabs container constrained and centered */
+/* Tabs container should match the widest content */
 .tab-list {
   display: flex;
   gap: 1rem;
@@ -193,7 +194,7 @@ header {
   padding: 0;
   list-style: none;
   width: 100%;
-  max-width: var(--content-max-width);
+  max-width: var(--data-page-max-width); /* Change from --content-max-width to --data-page-max-width */
   align-items: center;
   box-sizing: border-box;
   margin-left: auto;
@@ -249,15 +250,31 @@ main {
 }
 
 /* Centered two-column layout */
+/* Home tab - standard width */
 .main-content {
   display: flex;
   gap: var(--gap);
   padding: 2rem;
   width: 100%;
-  max-width: var(--content-max-width);
+  max-width: var(--content-max-width); /* 1200px */
   margin: 0 auto;
   min-height: calc(100vh - var(--header-height));
   box-sizing: border-box;
+}
+
+/* Data pages - wider */
+.profile-content,
+.nutrition-content,
+.food-log-content {
+  display: flex;
+  gap: var(--gap);
+  padding: 2rem;
+  width: 100%;
+  max-width: var(--data-page-max-width); /* 1600px - wider! */
+  margin: 0 auto;
+  min-height: calc(100vh - var(--header-height));
+  box-sizing: border-box;
+  flex-direction: column;
 }
 
 .left-panel,
@@ -270,37 +287,41 @@ main {
 .left-panel { background: #f8f9fa; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.06); }
 .right-panel { background: #fff; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.06); border: 1px solid #e0e0e0; }
 
-/* Profile Page specific styles */
-.profile-content {
-  padding-top: var(--header-height);
-  width: 100%;
-  max-width: var(--content-max-width);
-  margin: 0 auto;
-  box-sizing: border-box;
+/* Update responsive behavior */
+@media (max-width: 768px) { /* Changed from 900px to 768px */
+  .tab-list { 
+    gap: 0.5rem; 
+    overflow-x: auto; 
+    padding: 0 0.5rem; 
+  }
+  
+  .main-content,
+  .profile-content,
+  .nutrition-content,
+  .food-log-content { 
+    flex-direction: column; 
+    padding: 1rem; /* Only reduce padding on mobile */
+  }
+  
+  .user-info { 
+    margin-left: 0; 
+    margin-top: 0.5rem; 
+  }
 }
 
-/* Nutrition Management Page specific styles */
-.nutrition-content {
-  padding-top: var(--header-height);
-  width: 100%;
-  max-width: var(--content-max-width);
-  margin: 0 auto;
-  box-sizing: border-box;
-}
+/* Add this to the END of your App.vue <style> section to override main.css */
+@media (min-width: 1024px) {
+  body {
+    display: block !important;  /* Override the flex */
+    place-items: unset !important;
+  }
 
-/* Food Log Page specific styles */
-.food-log-content {
-  padding-top: var(--header-height);
-  width: 100%;
-  max-width: var(--content-max-width);
-  margin: 0 auto;
-  box-sizing: border-box;
-}
-
-/* Responsive: stack columns on small screens */
-@media (max-width: 900px) {
-  .tab-list { gap: 0.5rem; overflow-x: auto; padding: 0 0.5rem; }
-  .main-content { flex-direction: column; padding: 1rem; }
-  .user-info { margin-left: 0; margin-top: 0.5rem; }
+  #app {
+    display: block !important;           /* Override the grid */
+    grid-template-columns: unset !important;
+    padding: 0 !important;               /* Let your components control padding */
+    max-width: none !important;          /* Remove the 1280px limit */
+    margin: 0 !important;
+  }
 }
 </style>

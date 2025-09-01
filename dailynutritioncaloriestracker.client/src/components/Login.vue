@@ -98,24 +98,10 @@ export default {
   background: white;
   border-radius: 12px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-  padding: 40px;
+  padding: 50px;
   width: 100%;
-  max-width: 450px; /* Increased from mobile-first design */
-  min-width: 350px; /* Ensure minimum width for desktop */
-}
-
-@media (min-width: 768px) {
-  .login-card {
-    max-width: 500px; /* Even wider on tablets and up */
-    padding: 50px;
-  }
-}
-
-@media (min-width: 1024px) {
-  .login-card {
-    max-width: 600px; /* Desktop width */
-    padding: 60px;
-  }
+  max-width: 600px; /* This is OK - it's just for the login form */
+  min-width: 350px;
 }
 
 .login-title {

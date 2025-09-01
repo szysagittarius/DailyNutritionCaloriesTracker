@@ -204,8 +204,25 @@ onMounted(() => {
 <style scoped>
 .food-log-management {
   padding: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
+  /* Remove these lines if they exist: */
+  /* max-width: 1200px; */
+  /* margin: 0 auto; */
+}
+
+/* Make sure the table container uses full width */
+.table-container {
+  overflow-x: auto;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  margin-bottom: 2rem;
+  width: 100%; /* Ensure full width */
+}
+
+.food-log-table {
+  width: 100%;
+  border-collapse: collapse;
+  /* Don't set min-width too high */
 }
 
 .food-log-management h2 {
@@ -223,19 +240,6 @@ onMounted(() => {
   color: #34495e;
   margin-bottom: 1rem;
   font-size: 1.5rem;
-}
-
-.table-container {
-  overflow-x: auto;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  min-height: 200px;
-}
-
-.food-log-table {
-  width: 100%;
-  border-collapse: collapse;
 }
 
 .food-log-table th,
