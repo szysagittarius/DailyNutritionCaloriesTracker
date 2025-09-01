@@ -115,34 +115,67 @@ public class FoodLogController : ControllerBase
     [HttpPost("createfoodlog")]
     public async Task<IActionResult> PostAsync([FromBody] FoodLogDto foodLogDto)
     {
-        //insert the FoodLogDto to the database by calling the service
-
-        //1
-        MapperConfiguration dtoMapperConfig = new MapperConfiguration(cfg =>
+        try
         {
-            cfg.AddProfile(new FoodNutritionDtoProfiler());
-            cfg.AddProfile(new FoodItemDtoProfiler());
-            cfg.AddProfile(new FoodLogDtoProfiler());
-            cfg.AddProfile(new UserDtoProfiler());
-        });
+            // Add logging to see what we're receiving
+            _logger.LogInformation("Received FoodLogDto: UserId={UserId}, FoodItems count={Count}", 
+                foodLogDto?.UserId, foodLogDto?.FoodItems?.Count() ?? 0);
 
-        IMapper dtoMapper = dtoMapperConfig.CreateMapper();
+            // Validate the incoming data
+            if (foodLogDto == null)
+            {
+                _logger.LogWarning("FoodLogDto is null");
+                return BadRequest("FoodLog data is required");
+            }
 
-        FoodLogEntity entity3 = dtoMapper.Map<FoodLogEntity>(foodLogDto);
+            // Log the actual UserId value for debugging
+            _logger.LogInformation("UserId received: {UserId})", 
+                foodLogDto.UserId);
 
-        //temp bypass, need to covert to real after user controller added
-        entity3.UserId = Guid.Parse("00000000-0000-0000-0000-000000000001");
+            if (foodLogDto.UserId == Guid.Empty || foodLogDto.UserId == null)
+            {
+                _logger.LogWarning("Invalid UserId: {UserId}", foodLogDto.UserId);
+                return BadRequest("Valid user ID is required");
+            }
 
-        //UI work need to include the guid, it will be removed
-        foreach (FoodItemEntity item in entity3.FoodItems)
-        {
-            // Use the first food nutrition ID from the database (will be populated by SQL script)
-            item.FoodNutritionId = Guid.Parse("11111111-1111-1111-1111-111111111111");
+            if (foodLogDto.FoodItems == null || !foodLogDto.FoodItems.Any())
+            {
+                _logger.LogWarning("No food items provided");
+                return BadRequest("At least one food item is required");
+            }
+
+            // Validate that all food items have valid FoodNutritionId
+            foreach (var item in foodLogDto.FoodItems)
+            {
+                if (item.FoodNutritionId == Guid.Empty || item.FoodNutritionId == null)
+                {
+                    _logger.LogWarning("Invalid FoodNutritionId for item: {ItemName}", item.Id);
+                    return BadRequest($"Valid FoodNutritionId is required for food item: {item.Id}");
+                }
+            }
+
+            MapperConfiguration dtoMapperConfig = new MapperConfiguration(cfg =>
+            {
+                cfg.AddProfile(new FoodNutritionDtoProfiler());
+                cfg.AddProfile(new FoodItemDtoProfiler());
+                cfg.AddProfile(new FoodLogDtoProfiler());
+                cfg.AddProfile(new UserDtoProfiler());
+            });
+
+            IMapper dtoMapper = dtoMapperConfig.CreateMapper();
+            FoodLogEntity entity = dtoMapper.Map<FoodLogEntity>(foodLogDto);
+
+            await _foodLogService.AddAsync(entity);
+
+            _logger.LogInformation("Successfully created food log for user {UserId} with {ItemCount} items", 
+                foodLogDto.UserId, foodLogDto.FoodItems.Count());
+
+            return Ok(new { Message = "Food log created successfully", Id = entity.Id });
         }
-
-        // Process the data
-        await _foodLogService.AddAsync(entity3);
-
-        return Ok();
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while creating food log");
+            return StatusCode(500, "An error occurred while creating the food log");
+        }
     }
 }

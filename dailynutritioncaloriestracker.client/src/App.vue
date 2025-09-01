@@ -5,15 +5,39 @@
     import FoodLogPage from './components/FoodLogPage.vue'
     import ProfilePage from './components/ProfilePage.vue'
     import NutritionManagement from './components/NutritionManagement.vue'
-    import { ref } from 'vue'
+    import { ref, onMounted } from 'vue'
     import { useRouter } from 'vue-router'
     import api from './services/api'
 
     const foodLogKey = ref(0)
     const activeTab = ref('home')
     const router = useRouter()
-    const currentUser = ref(api.getCurrentUser())
+    const currentUser = ref(null) // Changed from api.getCurrentUser() to null
     const userSuggestedCalories = ref(2456) // Default value
+
+    // Function to load user data
+    const loadUserData = () => {
+        currentUser.value = api.getCurrentUser()
+        
+        // Add debug logging
+        console.log('=== APP.VUE DEBUG USER INFO ===')
+        console.log('api.getCurrentUser() result:', api.getCurrentUser())
+        console.log('currentUser.value:', currentUser.value)
+        console.log('currentUser.value?.id:', currentUser.value?.id)
+        console.log('currentUser.value?.userId:', currentUser.value?.userId)
+        console.log('currentUser.value?.username:', currentUser.value?.username)
+        console.log('=== END APP.VUE DEBUG ===')
+    }
+
+    // Load user data when component mounts
+    onMounted(() => {
+        loadUserData()
+        
+        // If no user data and not on login page, redirect to login
+        if (!currentUser.value && router.currentRoute.value.path !== '/login') {
+            router.push('/login')
+        }
+    })
 
     const handleFoodLogSubmitted = () => {
         foodLogKey.value++
@@ -64,6 +88,15 @@
       <main>
         <TheWelcome />
         
+        <!-- Debug info -->
+        <div style="background: yellow; padding: 5px; margin: 10px; font-size: 12px;">
+          <strong>App.vue Debug Info:</strong><br>
+          User ID: {{ currentUser?.id || currentUser?.userId || 'NOT FOUND' }}<br>
+          Username: {{ currentUser?.username || 'NO USERNAME' }}<br>
+          Current User Object: {{ JSON.stringify(currentUser, null, 2) }}<br>
+          User properties: {{ Object.keys(currentUser || {}).join(', ') }}
+        </div>
+        
         <!-- Profile Page -->
         <div v-if="activeTab === 'profile'" class="profile-content">
           <ProfilePage @profile-updated="handleProfileUpdated" />
@@ -82,11 +115,17 @@
         <!-- Main Content for home tab -->
         <div v-else class="main-content">
           <div class="left-panel">
+            <!-- ADD THE MISSING :user-id PROP HERE -->
             <NutritionTracker 
+              v-if="currentUser && currentUser.id"
               msg="You did it!" 
               :suggested-calories="userSuggestedCalories"
+              :user-id="currentUser.id"
               @food-log-submitted="handleFoodLogSubmitted" 
             />
+            <div v-else>
+              Loading user data...
+            </div>
           </div>
           <div class="right-panel">
             <FoodLog :key="foodLogKey"></FoodLog>

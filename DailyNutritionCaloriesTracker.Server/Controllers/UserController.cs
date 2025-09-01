@@ -54,7 +54,7 @@ public class UserController : ControllerBase
     }
 
     [HttpPost("login")]
-    public async Task<IActionResult> LoginAsync([FromBody] LoginDto loginDto)
+    public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
     {
         try
         {
@@ -73,7 +73,11 @@ public class UserController : ControllerBase
                 return Unauthorized(new { message = "Invalid username or password" });
             }
             
-            return Ok(new { message = "Login successful",  username = user.Name });
+            return Ok(new { 
+                message = "Login successful",
+                username = user.Name,  // or user.Name
+                id = user.Id               // ADD THIS LINE - this is the missing piece!
+            });
         }
         catch (Exception ex)
         {

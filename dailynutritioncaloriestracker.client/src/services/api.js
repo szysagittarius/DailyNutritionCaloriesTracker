@@ -39,10 +39,25 @@ const api = {
     
     const result = await response.json();
     
-    // Store user info in localStorage for session management
-    localStorage.setItem('user', JSON.stringify({
-      username: result.username
-    }));
+    console.log('=== BACKEND LOGIN RESPONSE ===');
+    console.log('Backend response:', result);
+    console.log('result.id:', result.id);
+    console.log('result.username:', result.username);
+    console.log('=== END BACKEND RESPONSE ===');
+    
+    // Store user info in localStorage INCLUDING the ID
+    if (result.id) {
+      const userToStore = {
+        id: result.id,
+        userId: result.id,
+        username: result.username
+      };
+      
+      localStorage.setItem('user', JSON.stringify(userToStore));
+      console.log('✅ Stored user data in localStorage:', userToStore);
+    } else {
+      console.error('❌ Backend did not return user ID!');
+    }
     
     return result;
   },
@@ -56,74 +71,58 @@ const api = {
     return userStr ? JSON.parse(userStr) : null;
   },
 
-  // Food Nutrition endpoints
+  // Remove token-related code for now
   async getFoodNutrition() {
-    const token = getAuthToken()
-    const response = await fetch(`${API_BASE_URL}/FoodNutrition`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    })
+    const response = await fetch(`${API_BASE_URL}/FoodNutrition`);
     
     if (!response.ok) {
-      throw new Error('Failed to fetch food nutrition data')
+      throw new Error('Failed to fetch food nutrition data');
     }
     
-    return response.json()
+    return response.json();
   },
 
   async addFoodNutrition(nutritionData) {
-    const token = getAuthToken()
     const response = await fetch(`${API_BASE_URL}/FoodNutrition`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(nutritionData)
-    })
+    });
     
     if (!response.ok) {
-      throw new Error('Failed to add food nutrition')
+      throw new Error('Failed to add food nutrition');
     }
     
-    return response.json()
+    return response.json();
   },
 
-  // Generic methods for flexibility
+  // Generic methods without token
   async get(endpoint) {
-    const token = getAuthToken()
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    })
+    const response = await fetch(`${API_BASE_URL}${endpoint}`);
     
     if (!response.ok) {
-      throw new Error(`Failed to fetch from ${endpoint}`)
+      throw new Error(`Failed to fetch from ${endpoint}`);
     }
     
-    return response.json()
+    return response.json();
   },
 
   async post(endpoint, data) {
-    const token = getAuthToken()
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(data)
-    })
+    });
     
     if (!response.ok) {
-      throw new Error(`Failed to post to ${endpoint}`)
+      throw new Error(`Failed to post to ${endpoint}`);
     }
     
-    return response.json()
+    return response.json();
   }
 };
 

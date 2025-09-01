@@ -55,11 +55,16 @@ export default {
       errorMessage.value = '';
       
       try {
-        await api.login({ 
+        const result = await api.login({ 
           username: username.value, 
           password: password.value 
         });
-        router.push('/'); // Redirect to main app
+        
+        console.log('Login successful, user data stored:', result);
+        
+        // Force page refresh to reload App.vue with user data
+        window.location.href = '/';
+        
       } catch (error) {
         console.error('Error during login:', error);
         errorMessage.value = 'Invalid username or password.';

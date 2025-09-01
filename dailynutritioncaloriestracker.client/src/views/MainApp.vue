@@ -2,26 +2,52 @@
 import NutritionTracker from '../components/NutritionTracker.vue'
 import TheWelcome from '../components/TheWelcome.vue'
 import FoodLog from '../components/FoodLog.vue'
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '../services/api'
 
 const foodLogKey = ref(0)
 const activeTab = ref('home')
 const router = useRouter()
-const currentUser = ref(api.getCurrentUser())
+const currentUser = ref(null) // Start with null
+
+// Function to load user data
+const loadUserData = () => {
+  currentUser.value = api.getCurrentUser()
+  
+  // Add debug logging
+  console.log('=== DEBUG USER INFO ===')
+  console.log('api.getCurrentUser() result:', api.getCurrentUser())
+  console.log('currentUser.value:', currentUser.value)
+  console.log('currentUser.value type:', typeof currentUser.value)
+  console.log('currentUser.value?.id:', currentUser.value?.id)
+  console.log('currentUser.value?.userId:', currentUser.value?.userId)
+  console.log('currentUser.value?.username:', currentUser.value?.username)
+  console.log('All properties of currentUser.value:', Object.keys(currentUser.value || {}))
+  console.log('=== END DEBUG ===')
+}
+
+// Load user data when component mounts
+onMounted(() => {
+  loadUserData()
+  
+  // If no user data, redirect to login
+  if (!currentUser.value) {
+    router.push('/login')
+  }
+})
 
 const handleFoodLogSubmitted = () => {
-    foodLogKey.value++
+  foodLogKey.value++
 }
 
 const setActiveTab = (tab) => {
-    activeTab.value = tab
+  activeTab.value = tab
 }
 
 const handleLogout = () => {
-    api.logout()
-    router.push('/login')
+  api.logout()
+  router.push('/login')
 }
 </script>
 
@@ -54,7 +80,25 @@ const handleLogout = () => {
     <TheWelcome />
     <div class="main-content">
       <div class="left-panel">
-        <NutritionTracker msg="You did it!" @food-log-submitted="handleFoodLogSubmitted" />
+        <!-- Debug info -->
+        <div style="background: yellow; padding: 5px; margin-bottom: 10px; font-size: 12px;">
+          <strong>Debug Info:</strong><br>
+          User ID: {{ currentUser?.id || currentUser?.userId || 'NOT FOUND' }}<br>
+          Username: {{ currentUser?.username || 'NO USERNAME' }}<br>
+          Current User Object: {{ JSON.stringify(currentUser, null, 2) }}<br>
+          User properties: {{ Object.keys(currentUser || {}).join(', ') }}
+        </div>
+        
+        <!-- Only render NutritionTracker when we have user data -->
+        <NutritionTracker 
+          v-if="currentUser && currentUser.id"
+          msg="You did it!" 
+          :suggested-calories="2456"
+          :user-id="currentUser.id" 
+          @food-log-submitted="handleFoodLogSubmitted" />
+        <div v-else>
+          Loading user data...
+        </div>
       </div>
       <div class="right-panel">
         <FoodLog :key="foodLogKey"></FoodLog>
