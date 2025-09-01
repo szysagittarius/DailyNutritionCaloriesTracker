@@ -10,8 +10,6 @@
           <thead>
             <tr>
               <th>Date</th>
-              <th>Food Name</th>
-              <th>Quantity</th>
               <th>Calories</th>
               <th>Protein (g)</th>
               <th>Carbs (g)</th>
@@ -21,12 +19,10 @@
           <tbody>
             <tr v-for="item in paginatedItems" :key="item.id">
               <td>{{ formatDate(item.dateLogged) }}</td>
-              <td>{{ item.foodName }}</td>
-              <td>{{ item.quantity }}</td>
-              <td>{{ item.calories }}</td>
-              <td>{{ item.protein }}</td>
-              <td>{{ item.carbs }}</td>
-              <td>{{ item.fat }}</td>
+              <td>{{ item.calories.toFixed(1) }}</td>
+              <td>{{ item.protein.toFixed(1) }}</td>
+              <td>{{ item.carbs.toFixed(1) }}</td>
+              <td>{{ item.fat.toFixed(1) }}</td>
             </tr>
           </tbody>
         </table>
@@ -70,19 +66,19 @@
       <div class="summary-cards">
         <div class="summary-card">
           <h4>Total Calories</h4>
-          <p class="summary-value">{{ todaySummary.calories }}</p>
+          <p class="summary-value">{{ todaySummary.calories.toFixed(1) }}</p>
         </div>
         <div class="summary-card">
           <h4>Protein</h4>
-          <p class="summary-value">{{ todaySummary.protein }}g</p>
+          <p class="summary-value">{{ todaySummary.protein.toFixed(1) }}g</p>
         </div>
         <div class="summary-card">
           <h4>Carbs</h4>
-          <p class="summary-value">{{ todaySummary.carbs }}g</p>
+          <p class="summary-value">{{ todaySummary.carbs.toFixed(1) }}g</p>
         </div>
         <div class="summary-card">
           <h4>Fat</h4>
-          <p class="summary-value">{{ todaySummary.fat }}g</p>
+          <p class="summary-value">{{ todaySummary.fat.toFixed(1) }}g</p>
         </div>
       </div>
     </div>
@@ -153,37 +149,18 @@ const fetchFoodLogData = async () => {
     const data = await response.json()
     console.log('Response data:', data)
     
-    // Transform the data - handle both cases: with and without food items
+    // Transform the data - show only summary per food log entry
     const transformedData = []
     if (Array.isArray(data)) {
       data.forEach(log => {
-        if (log.foodItems && Array.isArray(log.foodItems) && log.foodItems.length > 0) {
-          // If there are food items, create a row for each
-          log.foodItems.forEach(item => {
-            transformedData.push({
-              id: `${log.id || 'unknown'}-${item.id || Math.random()}`,
-              dateLogged: log.dateTime || log.createTime,
-              foodName: item.foodName || 'Unknown Food',
-              quantity: item.quantity || 0,
-              calories: item.calories || 0,
-              protein: item.protein || 0,
-              carbs: item.carbs || 0,
-              fat: item.fat || 0
-            })
-          })
-        } else {
-          // If no food items, show the log entry with totals
-          transformedData.push({
-            id: log.id || Math.random(),
-            dateLogged: log.dateTime || log.createTime,
-            foodName: 'Food Log Entry (No Items)',
-            quantity: '-',
-            calories: log.totalCalories || 0,
-            protein: log.totalProtein || 0,
-            carbs: log.totalCarbs || 0,
-            fat: log.totalFat || 0
-          })
-        }
+        transformedData.push({
+          id: log.id || Math.random(),
+          dateLogged: log.dateTime || log.createTime,
+          calories: log.totalCalories || 0,
+          protein: log.totalProtein || 0,
+          carbs: log.totalCarbs || 0,
+          fat: log.totalFat || 0
+        })
       })
     }
     
@@ -191,7 +168,7 @@ const fetchFoodLogData = async () => {
     transformedData.sort((a, b) => new Date(b.dateLogged) - new Date(a.dateLogged))
     
     foodLogItems.value = transformedData
-    console.log('Loaded food log items:', foodLogItems.value.length)
+    console.log('Loaded food log entries:', foodLogItems.value.length)
   } catch (error) {
     console.error('Error fetching food log data:', error)
     alert('Failed to load food log data: ' + error.message)
@@ -266,6 +243,10 @@ onMounted(() => {
   padding: 12px;
   text-align: left;
   border-bottom: 1px solid #e0e0e0;
+}
+
+.food-log-table td:not(:first-child) {
+  text-align: right; /* Right-align numeric values */
 }
 
 .food-log-table th {
