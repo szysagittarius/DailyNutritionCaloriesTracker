@@ -1,0 +1,46 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\NutritionTracker.Domain\NutritionTracker.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Behaviors\" />
+    <Folder Include="Commands\Foods\" />
+    <Folder Include="Commands\Nutrition\" />
+    <Folder Include="Commands\Recipes\" />
+    <Folder Include="Commands\Users\" />
+    <Folder Include="DTOs\Common\" />
+    <Folder Include="DTOs\Foods\" />
+    <Folder Include="DTOs\Nutrition\" />
+    <Folder Include="DTOs\Users\" />
+    <Folder Include="Ports\Input\Foods\" />
+    <Folder Include="Ports\Input\Nutrition\" />
+    <Folder Include="Ports\Input\Recipes\" />
+    <Folder Include="Ports\Input\Reports\" />
+    <Folder Include="Ports\Input\Users\" />
+    <Folder Include="Ports\Output\ExternalServices\" />
+    <Folder Include="Ports\Output\Infrastructure\" />
+    <Folder Include="Ports\Output\Repositories\" />
+    <Folder Include="Queries\Foods\" />
+    <Folder Include="Queries\Nutrition\" />
+    <Folder Include="Queries\Recipes\" />
+    <Folder Include="Queries\Reports\" />
+    <Folder Include="Queries\Users\" />
+    <Folder Include="UseCases\Foods\" />
+    <Folder Include="UseCases\Nutrition\" />
+    <Folder Include="UseCases\Recipes\" />
+    <Folder Include="UseCases\Reports\" />
+    <Folder Include="UseCases\Users\" />
+    <Folder Include="Validators\Foods\" />
+    <Folder Include="Validators\Nutrition\" />
+    <Folder Include="Validators\Users\" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>
