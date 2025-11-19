@@ -1,0 +1,133 @@
+# Azure DevOps Pipeline - Deploy Infrastructure
+# Path: deployment/pipelines/azure-devops-infrastructure.yml
+
+trigger: none # Manual trigger only
+
+parameters:
+- name: environment
+  displayName: 'Environment'
+  type: string
+  default: 'dev'
+  values:
+  - dev
+  - staging
+  - production
+
+variables:
+  azureLocation: 'eastus'
+  resourceGroupPrefix: 'rg-nutrition-tracker'
+  resourceGroup: '${{ variables.resourceGroupPrefix }}-${{ parameters.environment }}'
+  storageAccount: 'stnutritiontracker${{ parameters.environment }}'
+  functionApp: 'func-nutrition-tracker-${{ parameters.environment }}'
+  appServicePlan: 'asp-nutrition-tracker-${{ parameters.environment }}'
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+stages:
+- stage: DeployInfrastructure
+  displayName: 'Deploy Azure Infrastructure'
+  jobs:
+  - deployment: DeployResources
+    displayName: 'Deploy Azure Resources'
+    environment: ${{ parameters.environment }}
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: AzureCLI@2
+            displayName: 'Create Resource Group'
+            inputs:
+              azureSubscription: '$(azureServiceConnection)'
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                az group create \
+                  --name $(resourceGroup) \
+                  --location $(azureLocation)
+
+          - task: AzureCLI@2
+            displayName: 'Create Storage Account'
+            inputs:
+              azureSubscription: '$(azureServiceConnection)'
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                az storage account create \
+                  --name $(storageAccount) \
+                  --resource-group $(resourceGroup) \
+                  --location $(azureLocation) \
+                  --sku Standard_LRS \
+                  --kind StorageV2 \
+                  --allow-blob-public-access false \
+                  --min-tls-version TLS1_2
+
+          - task: AzureCLI@2
+            displayName: 'Create Function App'
+            inputs:
+              azureSubscription: '$(azureServiceConnection)'
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                FUNC_STORAGE_ACCOUNT="stfunc$(echo $(functionApp) | sed 's/-//g' | cut -c1-17)"
+                
+                az storage account create \
+                  --name $FUNC_STORAGE_ACCOUNT \
+                  --resource-group $(resourceGroup) \
+                  --location $(azureLocation) \
+                  --sku Standard_LRS
+                
+                az functionapp create \
+                  --name $(functionApp) \
+                  --resource-group $(resourceGroup) \
+                  --consumption-plan-location $(azureLocation) \
+                  --storage-account $FUNC_STORAGE_ACCOUNT \
+                  --runtime dotnet-isolated \
+                  --runtime-version 8 \
+                  --functions-version 4 \
+                  --os-type Linux
+
+          - task: AzureCLI@2
+            displayName: 'Configure Function App Settings'
+            inputs:
+              azureSubscription: '$(azureServiceConnection)'
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                TABLE_CONNECTION_STRING=$(az storage account show-connection-string \
+                  --name $(storageAccount) \
+                  --resource-group $(resourceGroup) \
+                  --query connectionString -o tsv)
+                
+                az functionapp config appsettings set \
+                  --name $(functionApp) \
+                  --resource-group $(resourceGroup) \
+                  --settings \
+                    "AzureTableStorageConnectionString=$TABLE_CONNECTION_STRING" \
+                    "FUNCTIONS_WORKER_RUNTIME=dotnet-isolated"
+                
+                az functionapp cors add \
+                  --name $(functionApp) \
+                  --resource-group $(resourceGroup) \
+                  --allowed-origins "*"
+
+          - task: AzureCLI@2
+            displayName: 'Output deployment information'
+            inputs:
+              azureSubscription: '$(azureServiceConnection)'
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                FUNCTION_URL=$(az functionapp show \
+                  --name $(functionApp) \
+                  --resource-group $(resourceGroup) \
+                  --query defaultHostName -o tsv)
+                
+                echo "##[section]Deployment Summary"
+                echo "Environment: ${{ parameters.environment }}"
+                echo "Resource Group: $(resourceGroup)"
+                echo "Storage Account: $(storageAccount)"
+                echo "Function App: $(functionApp)"
+                echo "Function URL: https://$FUNCTION_URL"
+                
+                echo "##vso[task.setvariable variable=functionUrl;isOutput=true]https://$FUNCTION_URL"

@@ -1,0 +1,22 @@
+name: Deploy Infrastructure
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - staging
+          - production
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/call-pipeline.yml
+    with:
+      pipeline-file: deployment/pipelines/infrastructure.yml
+      environment: ${{ inputs.environment }}
+    secrets: inherit

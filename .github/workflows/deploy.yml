@@ -1,0 +1,20 @@
+name: Deploy Azure Functions
+
+on:
+  workflow_dispatch:  # Manual trigger only - safe for initial setup
+  # Uncomment below after testing infrastructure and configuring secrets
+  # push:
+  #   branches:
+  #     - main
+  #   paths:
+  #     - 'src/Adapters/Input/NutritionTracker.AzureFunctions/**'
+  #     - 'src/Adapters/Output/NutritionTracker.AzureTableStorage/**'
+  #     - 'src/Core/**'
+  #     - 'deployment/pipelines/deploy-azure-functions.yml'
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/call-pipeline.yml
+    with:
+      pipeline-file: deployment/pipelines/deploy-azure-functions.yml
+    secrets: inherit

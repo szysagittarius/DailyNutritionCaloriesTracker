@@ -1,0 +1,19 @@
+name: Build and Test
+
+on:
+  workflow_dispatch:  # Manual trigger only - safe for initial setup
+  # Uncomment below after testing and configuring secrets
+  # push:
+  #   branches:
+  #     - main
+  #     - develop
+  # pull_request:
+  #   branches:
+  #     - main
+  #     - develop
+
+jobs:
+  build:
+    uses: ./.github/workflows/call-pipeline.yml
+    with:
+      pipeline-file: deployment/pipelines/build-and-test.yml

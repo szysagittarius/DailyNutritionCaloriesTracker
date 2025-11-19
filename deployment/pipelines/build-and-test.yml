@@ -1,0 +1,67 @@
+name: Build and Test
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+
+env:
+  DOTNET_VERSION: '8.0.x'
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Restore dependencies
+      run: dotnet restore src/NutritionTracker.sln
+
+    - name: Build solution
+      run: dotnet build src/NutritionTracker.sln --configuration Release --no-restore
+
+    - name: Run tests
+      run: dotnet test src/NutritionTracker.sln --configuration Release --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx"
+
+    - name: Publish test results
+      uses: EnricoMi/publish-unit-test-result-action@v2
+      if: always()
+      with:
+        files: '**/test-results.trx'
+
+    - name: Build Azure Functions
+      run: |
+        dotnet publish src/Adapters/Input/NutritionTracker.AzureFunctions/NutritionTracker.AzureFunctions.csproj \
+          --configuration Release \
+          --output ./artifacts/azure-functions
+
+    - name: Upload Azure Functions artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: azure-functions
+        path: ./artifacts/azure-functions
+
+    - name: Check code coverage (if tests exist)
+      run: |
+        if [ -d "src/Tests" ]; then
+          dotnet test src/NutritionTracker.sln \
+            --configuration Release \
+            --no-build \
+            --collect:"XPlat Code Coverage" \
+            --results-directory ./coverage
+          echo "Code coverage collected"
+        else
+          echo "No tests found, skipping coverage"
+        fi

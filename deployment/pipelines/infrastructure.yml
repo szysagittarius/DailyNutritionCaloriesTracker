@@ -1,0 +1,158 @@
+name: Deploy Azure Infrastructure
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - staging
+          - production
+
+env:
+  AZURE_LOCATION: 'eastus'
+  RESOURCE_GROUP_PREFIX: 'rg-nutrition-tracker'
+
+jobs:
+  deploy-infrastructure:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Azure Login
+      uses: azure/login@v2
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Set environment variables
+      run: |
+        echo "RESOURCE_GROUP=${{ env.RESOURCE_GROUP_PREFIX }}-${{ inputs.environment }}" >> $GITHUB_ENV
+        echo "STORAGE_ACCOUNT=stnutritiontracker${{ inputs.environment }}" >> $GITHUB_ENV
+        echo "FUNCTION_APP=func-nutrition-tracker-${{ inputs.environment }}" >> $GITHUB_ENV
+        echo "APP_SERVICE_PLAN=asp-nutrition-tracker-${{ inputs.environment }}" >> $GITHUB_ENV
+
+    - name: Create Resource Group
+      uses: azure/CLI@v2
+      with:
+        inlineScript: |
+          az group create \
+            --name ${{ env.RESOURCE_GROUP }} \
+            --location ${{ env.AZURE_LOCATION }}
+
+    - name: Create Storage Account
+      uses: azure/CLI@v2
+      with:
+        inlineScript: |
+          # Create storage account for Azure Table Storage
+          az storage account create \
+            --name ${{ env.STORAGE_ACCOUNT }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --location ${{ env.AZURE_LOCATION }} \
+            --sku Standard_LRS \
+            --kind StorageV2 \
+            --allow-blob-public-access false \
+            --min-tls-version TLS1_2
+          
+          # Get connection string
+          CONNECTION_STRING=$(az storage account show-connection-string \
+            --name ${{ env.STORAGE_ACCOUNT }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --query connectionString -o tsv)
+          
+          echo "Storage account created successfully"
+          echo "::add-mask::$CONNECTION_STRING"
+
+    - name: Create Function App (Consumption Plan)
+      uses: azure/CLI@v2
+      with:
+        inlineScript: |
+          # Create storage account for Function App (required for Functions)
+          FUNC_STORAGE_ACCOUNT="stfunc$(echo ${{ env.FUNCTION_APP }} | sed 's/-//g' | cut -c1-17)"
+          
+          az storage account create \
+            --name $FUNC_STORAGE_ACCOUNT \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --location ${{ env.AZURE_LOCATION }} \
+            --sku Standard_LRS
+          
+          # Create Function App on Consumption plan (Y1)
+          az functionapp create \
+            --name ${{ env.FUNCTION_APP }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --consumption-plan-location ${{ env.AZURE_LOCATION }} \
+            --storage-account $FUNC_STORAGE_ACCOUNT \
+            --runtime dotnet-isolated \
+            --runtime-version 8 \
+            --functions-version 4 \
+            --os-type Linux
+
+    - name: Configure Function App Settings
+      uses: azure/CLI@v2
+      with:
+        inlineScript: |
+          # Get Table Storage connection string
+          TABLE_CONNECTION_STRING=$(az storage account show-connection-string \
+            --name ${{ env.STORAGE_ACCOUNT }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --query connectionString -o tsv)
+          
+          # Configure application settings
+          az functionapp config appsettings set \
+            --name ${{ env.FUNCTION_APP }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --settings \
+              "AzureTableStorageConnectionString=$TABLE_CONNECTION_STRING" \
+              "FUNCTIONS_WORKER_RUNTIME=dotnet-isolated"
+          
+          # Enable CORS for development (adjust for production)
+          az functionapp cors add \
+            --name ${{ env.FUNCTION_APP }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --allowed-origins "*"
+
+    - name: Output deployment information
+      uses: azure/CLI@v2
+      with:
+        inlineScript: |
+          FUNCTION_URL=$(az functionapp show \
+            --name ${{ env.FUNCTION_APP }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --query defaultHostName -o tsv)
+          
+          echo "### Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment**: ${{ inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Resource Group**: ${{ env.RESOURCE_GROUP }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Storage Account**: ${{ env.STORAGE_ACCOUNT }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Function App**: ${{ env.FUNCTION_APP }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Function URL**: https://$FUNCTION_URL" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Next Steps:**" >> $GITHUB_STEP_SUMMARY
+          echo "1. Download publish profile from Azure Portal" >> $GITHUB_STEP_SUMMARY
+          echo "2. Add as GitHub secret: AZURE_FUNCTIONAPP_PUBLISH_PROFILE" >> $GITHUB_STEP_SUMMARY
+          echo "3. Run 'Deploy Azure Functions' workflow to deploy code" >> $GITHUB_STEP_SUMMARY
+
+    - name: Get publish profile
+      uses: azure/CLI@v2
+      with:
+        inlineScript: |
+          echo "Getting publish profile for Function App..."
+          az functionapp deployment list-publishing-profiles \
+            --name ${{ env.FUNCTION_APP }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --xml > publish-profile.xml
+          
+          echo "Publish profile saved. Add it as GitHub secret 'AZURE_FUNCTIONAPP_PUBLISH_PROFILE'"
+
+    - name: Upload publish profile
+      uses: actions/upload-artifact@v4
+      with:
+        name: publish-profile
+        path: publish-profile.xml
+        retention-days: 1
