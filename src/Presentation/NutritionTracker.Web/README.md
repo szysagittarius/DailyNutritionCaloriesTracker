@@ -55,7 +55,16 @@ The API base URL is configured in `.env` files:
 - `.env.development` - Development configuration
 - `.env.production` - Production configuration
 
-Default API URL: `https://localhost:7155`
+Two variables control where API calls go:
+
+| Variable | Purpose |
+|---|---|
+| `VITE_API_URL` | Prepended to every API path in `api.js`. Leave **empty** to use the Vite dev-server proxy (recommended for local dev). |
+| `VITE_API_TARGET` | The backend URL the Vite proxy forwards `/api/*` requests to. Change this to switch backends. |
+
+**Current local targets:**
+- REST API (default): `VITE_API_TARGET=https://localhost:7155`
+- Azure Functions (alternative): `VITE_API_TARGET=http://127.0.0.1:7071`
 
 ## Available Scripts
 
@@ -74,6 +83,8 @@ Default API URL: `https://localhost:7155`
 
 ## Notes
 
-- The frontend communicates with the REST API at `https://localhost:7155`
+- The frontend proxies all `/api/*` calls through the Vite dev server to the configured backend
+- **REST API** (default): `https://localhost:7155` — requires SQL Server
+- **Azure Functions** (alternative): `http://127.0.0.1:7071` — requires Azurite table emulator
 - User authentication data is stored in localStorage
 - The app uses Vue Router for navigation between pages

@@ -23,6 +23,7 @@ public class GetUserByUsernameUseCase
             Id = user.Id,
             Name = user.Name,
             Email = user.Email,
+            Password = user.Password,
             SuggestedCalories = user.SuggestedCalories,
             SuggestedCarbs = user.SuggestedCarbs,
             SuggestedFat = user.SuggestedFat,

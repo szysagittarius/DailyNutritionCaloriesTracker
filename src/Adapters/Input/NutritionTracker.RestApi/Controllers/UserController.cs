@@ -7,6 +7,7 @@ namespace NutritionTracker.RestApi.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Route("api/users")]
 public class UserController : ControllerBase
 {
     private readonly GetAllUsersUseCase _getAllUsersUseCase;
@@ -118,7 +119,34 @@ public class UserController : ControllerBase
         }
     }
 
+    [HttpPost("login")]
+    public async Task<ActionResult<LoginResponse>> Login([FromBody] LoginRequest request)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(request?.Username) || string.IsNullOrWhiteSpace(request?.Password))
+                return BadRequest(new LoginResponse { Message = "Username and password are required" });
+
+            var user = await _getUserByUsernameUseCase.ExecuteAsync(request.Username);
+            if (user == null || user.Password != request.Password)
+                return Unauthorized(new LoginResponse { Message = "Invalid username or password" });
+
+            return Ok(new LoginResponse
+            {
+                Id = user.Id,
+                Username = user.Name,
+                Message = "Login successful"
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while logging in user {Username}", request?.Username);
+            return StatusCode(500, new LoginResponse { Message = "An error occurred while logging in" });
+        }
+    }
+
     [HttpPost]
+    [HttpPost("createuser")]
     public async Task<ActionResult<ApiResponse<UserResponse>>> Create([FromBody] CreateUserRequest request)
     {
         try

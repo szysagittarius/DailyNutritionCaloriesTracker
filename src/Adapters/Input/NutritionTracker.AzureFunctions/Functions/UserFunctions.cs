@@ -34,6 +34,13 @@ public class UserFunctions
         _updateUserUseCase = updateUserUseCase;
     }
 
+    [Function("LoginUser")]
+    public async Task<HttpResponseData> LoginUser(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "user/login")] HttpRequestData req)
+    {
+        return await HandleLogin(req);
+    }
+
     [Function("GetUsers")]
     public async Task<HttpResponseData> GetUsers(
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "users")] HttpRequestData req)
@@ -141,17 +148,67 @@ public class UserFunctions
         }
     }
 
-    [Function("CreateUser")]
-    public async Task<HttpResponseData> CreateUser(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "users")] HttpRequestData req)
+    private async Task<HttpResponseData> HandleLogin(HttpRequestData req)
     {
         try
         {
             var body = await req.ReadAsStringAsync();
-            var request = JsonSerializer.Deserialize<CreateUserRequest>(body!, new JsonSerializerOptions
+            if (string.IsNullOrWhiteSpace(body))
             {
-                PropertyNameCaseInsensitive = true
-            });
+                return await CreateJsonResponse(req, HttpStatusCode.BadRequest,
+                    new LoginResponse { Message = "Username and password are required" });
+            }
+
+            LoginRequest? request = ParseLoginRequest(body);
+
+            if (string.IsNullOrWhiteSpace(request?.Username) || string.IsNullOrWhiteSpace(request?.Password))
+            {
+                return await CreateJsonResponse(req, HttpStatusCode.BadRequest,
+                    new LoginResponse { Message = "Username and password are required" });
+            }
+
+            var user = await _getUserByUsernameUseCase.ExecuteAsync(request.Username);
+            if (user == null || user.Password != request.Password)
+            {
+                return await CreateJsonResponse(req, HttpStatusCode.Unauthorized,
+                    new LoginResponse { Message = "Invalid username or password" });
+            }
+
+            return await CreateJsonResponse(req, HttpStatusCode.OK,
+                new LoginResponse
+                {
+                    Id = user.Id,
+                    Username = user.Name,
+                    Message = "Login successful"
+                });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error logging in user");
+            return await CreateJsonResponse(req, HttpStatusCode.InternalServerError,
+                new LoginResponse { Message = "An error occurred while logging in" });
+        }
+    }
+
+    [Function("CreateUser")]
+    public async Task<HttpResponseData> CreateUser(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "users")] HttpRequestData req)
+    {
+        return await HandleCreateUser(req);
+    }
+
+    private async Task<HttpResponseData> HandleCreateUser(HttpRequestData req)
+    {
+        try
+        {
+            var body = await req.ReadAsStringAsync();
+            if (string.IsNullOrWhiteSpace(body))
+            {
+                return await CreateJsonResponse(req, HttpStatusCode.BadRequest,
+                    ApiResponse<UserResponse>.FailureResult("Invalid request data"));
+            }
+
+            CreateUserRequest? request = ParseCreateUserRequest(body);
 
             if (request == null)
             {
@@ -251,6 +308,105 @@ public class UserFunctions
             return await CreateJsonResponse(req, HttpStatusCode.InternalServerError,
                 ApiResponse<UserResponse>.FailureResult("An error occurred"));
         }
+    }
+
+    private static LoginRequest? ParseLoginRequest(string? body)
+    {
+        if (string.IsNullOrWhiteSpace(body))
+        {
+            return null;
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<LoginRequest>(body, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+        }
+        catch (JsonException)
+        {
+            try
+            {
+                using var document = JsonDocument.Parse(body);
+                if (document.RootElement.ValueKind != JsonValueKind.Object)
+                {
+                    return null;
+                }
+
+                return new LoginRequest
+                {
+                    Username = GetStringProperty(document.RootElement, "username", "email") ?? string.Empty,
+                    Password = GetStringProperty(document.RootElement, "password") ?? string.Empty
+                };
+            }
+            catch (JsonException)
+            {
+                return null;
+            }
+        }
+    }
+
+    private static CreateUserRequest? ParseCreateUserRequest(string? body)
+    {
+        if (string.IsNullOrWhiteSpace(body))
+        {
+            return null;
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<CreateUserRequest>(body, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+        }
+        catch (JsonException)
+        {
+            try
+            {
+                using var document = JsonDocument.Parse(body);
+                if (document.RootElement.ValueKind != JsonValueKind.Object)
+                {
+                    return null;
+                }
+
+                return new CreateUserRequest
+                {
+                    Name = GetStringProperty(document.RootElement, "name", "username") ?? string.Empty,
+                    Email = GetStringProperty(document.RootElement, "email") ?? string.Empty,
+                    Password = GetStringProperty(document.RootElement, "password") ?? string.Empty,
+                    SuggestedCalories = GetDoubleProperty(document.RootElement, "suggestedCalories"),
+                    SuggestedCarbs = GetDoubleProperty(document.RootElement, "suggestedCarbs"),
+                    SuggestedFat = GetDoubleProperty(document.RootElement, "suggestedFat"),
+                    SuggestedProtein = GetDoubleProperty(document.RootElement, "suggestedProtein")
+                };
+            }
+            catch (JsonException)
+            {
+                return null;
+            }
+        }
+    }
+
+    private static string? GetStringProperty(JsonElement element, params string[] propertyNames)
+    {
+        foreach (var propertyName in propertyNames)
+        {
+            if (element.TryGetProperty(propertyName, out var propertyValue) && propertyValue.ValueKind == JsonValueKind.String)
+            {
+                return propertyValue.GetString();
+            }
+        }
+
+        return null;
+    }
+
+    private static double GetDoubleProperty(JsonElement element, string propertyName)
+    {
+        return element.TryGetProperty(propertyName, out var propertyValue) && propertyValue.ValueKind is JsonValueKind.Number
+            ? propertyValue.GetDouble()
+            : 0;
     }
 
     private static async Task<HttpResponseData> CreateJsonResponse<T>(

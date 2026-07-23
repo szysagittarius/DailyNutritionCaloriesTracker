@@ -158,10 +158,11 @@ export default {
       try {
         const currentUser = api.getCurrentUser()
         if (currentUser) {
-          const response = await fetch(`/user/profile/${currentUser.username}`)
+          const response = await fetch(`/api/User/username/${encodeURIComponent(currentUser.username)}`)
           
           if (response.ok) {
-            const userData = await response.json()
+            const json = await response.json()
+            const userData = json.data || json
             this.profile.name = userData.name || currentUser.username || ''
             this.profile.email = userData.email || ''
             this.profile.suggestedCalories = userData.suggestedCalories || 2456
@@ -182,7 +183,9 @@ export default {
       this.errorMessage = ''
       
       try {
-        const response = await fetch('/user/updateprofile', {
+        const currentUser = api.getCurrentUser()
+        const userId = currentUser?.id
+        const response = await fetch(`/api/User/${userId}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',

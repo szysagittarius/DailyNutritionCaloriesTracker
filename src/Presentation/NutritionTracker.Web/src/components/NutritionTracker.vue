@@ -96,24 +96,24 @@
         methods: {
             fetchData() {
                 this.loading = true;
-                fetch('foodnutrition/getlist')
+                fetch('/api/FoodNutrition')
                     .then(r => r.json())
                     .then(json => {
-                        this.post = json;
+                        this.post = json.data || json;
                         this.loading = false;
                     });
             },
             async fetchAvailableFoods() {
                 try {
-                    const response = await fetch('foodnutrition/getlist');
+                    const response = await fetch('/api/FoodNutrition');
                     
                     if (!response.ok) {
                         throw new Error(`HTTP error! status: ${response.status}`);
                     }
                     
-                    const foods = await response.json();
-                    this.availableFoods = foods;
-                    console.log('Fetched available foods:', foods);
+                    const json = await response.json();
+                    this.availableFoods = json.data || json;
+                    console.log('Fetched available foods:', this.availableFoods);
                 } catch (error) {
                     console.error('Error fetching available foods:', error);
                     this.availableFoods = [];
@@ -150,18 +150,17 @@
                     }
 
                     const foodLogData = {
+                        dateTime: new Date().toISOString(),
                         userId: this.userId,
-                        logDate: new Date().toISOString(),
                         foodItems: validEntries.map(entry => ({
-                            name: entry.name,
-                            unit: entry.amount,
-                            foodNutritionId: entry.foodNutritionId
+                            foodNutritionId: entry.foodNutritionId,
+                            unit: Math.round(entry.amount)
                         }))
                     };
 
                     console.log('📤 Sending foodLogData:', foodLogData);
 
-                    const response = await fetch('/foodlog/createfoodlog', {
+                    const response = await fetch('/api/FoodLog', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'

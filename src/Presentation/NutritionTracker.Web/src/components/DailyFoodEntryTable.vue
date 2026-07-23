@@ -38,7 +38,6 @@
 </template>
 
 <script>
-    import axios from 'axios';
     import { FoodItemDto } from '@/models/FoodItemDto';
 
     export default {
@@ -131,16 +130,32 @@
 
                 console.log('📤 Sending foodLogDto:', foodLogDto);
 
-                axios.post('/foodlog/createfoodlog', foodLogDto)
+                const apiPayload = {
+                    dateTime: new Date().toISOString(),
+                    userId: this.userId,
+                    foodItems: validEntries.map(item => ({
+                        foodNutritionId: item.foodNutritionId,
+                        unit: Math.round(item.amount)
+                    }))
+                };
+                console.log('📤 Sending apiPayload:', apiPayload);
+                fetch('/api/FoodLog', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(apiPayload)
+                })
                     .then(response => {
-                        console.log('✅ Food log created successfully:', response.data);
+                        if (!response.ok) return response.text().then(t => Promise.reject(t));
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('✅ Food log created successfully:', data);
                         this.$emit('food-log-submitted');
                         alert('Food log submitted successfully!');
                     })
                     .catch(error => {
                         console.error('❌ Error creating food log:', error);
-                        console.error('❌ Error details:', error.response?.data);
-                        alert('Failed to submit food log: ' + (error.response?.data?.message || error.message));
+                        alert('Failed to submit food log: ' + error);
                     });
             }
         }

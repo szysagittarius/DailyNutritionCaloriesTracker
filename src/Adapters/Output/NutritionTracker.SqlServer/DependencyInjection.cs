@@ -13,9 +13,12 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
+        var connectionString = configuration.GetConnectionString("DefaultConnection") 
+            ?? configuration.GetConnectionString("NutritionTracker");
+
         services.AddDbContext<NutritionTrackerDbContext>(options =>
             options.UseSqlServer(
-                configuration.GetConnectionString("DefaultConnection"),
+                connectionString,
                 b => b.MigrationsAssembly(typeof(NutritionTrackerDbContext).Assembly.FullName)));
 
         // Register repositories

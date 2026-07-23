@@ -29,7 +29,8 @@ public class UserRepository : IUserRepository
 
     public async Task<User?> GetByUsernameAsync(string username, CancellationToken cancellationToken = default)
     {
-        var entity = await _context.Users.FirstOrDefaultAsync(u => u.Name == username, cancellationToken);
+        var entity = await _context.Users.FirstOrDefaultAsync(
+            u => u.Name == username || u.Email == username, cancellationToken);
         return entity != null ? EntityMapper.ToDomain(entity) : null;
     }
 

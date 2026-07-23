@@ -42,8 +42,7 @@ if (!fs.existsSync(certFilePath) || !fs.existsSync(keyFilePath)) {
     console.log('Certificate created successfully!');
 }
 
-const target = env.ASPNETCORE_HTTPS_PORT ? `https://localhost:${env.ASPNETCORE_HTTPS_PORT}` :
-    env.ASPNETCORE_URLS ? env.ASPNETCORE_URLS.split(';')[0] : 'https://localhost:7155';
+const target = env.VITE_API_TARGET || env.VITE_API_URL || 'https://localhost:7155';
 
 // https://vitejs.dev/config/
 export default defineConfig({

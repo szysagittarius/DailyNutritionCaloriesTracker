@@ -6,7 +6,7 @@
     <div class="summary-section">
       <h3>Today's Summary</h3>
       
-      <!-- Import the nutrition component here -->
+      <!-- Today's Summary component with circular progress and nutrient bars -->
       <TodayNutritionSummary 
         :today-totals="todaySummary"
         :suggested-calories="userProfile.suggestedCalories"
@@ -14,26 +14,6 @@
         :suggested-fat="userProfile.suggestedFat"
         :suggested-protein="userProfile.suggestedProtein"
       />
-      
-      <!-- Keep existing summary cards below or remove them -->
-      <div class="summary-cards">
-        <div class="summary-card">
-          <h4>Total Calories</h4>
-          <p class="summary-value">{{ todaySummary.calories.toFixed(1) }}</p>
-        </div>
-        <div class="summary-card">
-          <h4>Protein</h4>
-          <p class="summary-value">{{ todaySummary.protein.toFixed(1) }}g</p>
-        </div>
-        <div class="summary-card">
-          <h4>Carbs</h4>
-          <p class="summary-value">{{ todaySummary.carbs.toFixed(1) }}g</p>
-        </div>
-        <div class="summary-card">
-          <h4>Fat</h4>
-          <p class="summary-value">{{ todaySummary.fat.toFixed(1) }}g</p>
-        </div>
-      </div>
     </div>
     
     <!-- Food Log Table -->
@@ -133,10 +113,20 @@ const paginatedItems = computed(() => {
 })
 
 const todaySummary = computed(() => {
-  const today = new Date().toDateString()
+  // Build today's local date string "YYYY-MM-DD" using local clock
+  const now = new Date()
+  const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+
   const todayItems = foodLogItems.value.filter(item => {
-    const itemDate = new Date(item.dateLogged).toDateString()
-    return itemDate === today
+    const raw = item.dateLogged
+    if (!raw) return false
+    // Stored datetimes are UTC but may lack the Z suffix.
+    // Append Z so the browser parses them as UTC, then convert to local date.
+    const hasTimezone = /[Zz]$|[+-]\d{2}:?\d{2}$/.test(raw)
+    const d = new Date(hasTimezone ? raw : raw + 'Z')
+    if (isNaN(d.getTime())) return false
+    const itemDateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+    return itemDateStr === todayStr
   })
   
   // This sums up ALL today's food log entries
@@ -156,7 +146,7 @@ const fetchFoodLogData = async () => {
     console.log('Fetching food log data for user:', userId)
     console.log('Current user object:', currentUser.value)
     
-    const response = await fetch(`foodlog/GetUserFoodLogs/${userId}`, {
+    const response = await fetch(`/api/FoodLog/user/${userId}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json'
@@ -169,7 +159,8 @@ const fetchFoodLogData = async () => {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
     
-    const data = await response.json()
+    const json = await response.json()
+    const data = json.data || json
     console.log('Response data:', data)
     
     // Transform the data - show only summary per food log entry
@@ -203,9 +194,10 @@ const fetchFoodLogData = async () => {
 const fetchUserProfile = async () => {
   try {
     if (currentUser.value?.username) {
-      const response = await fetch(`/user/profile/${currentUser.value.username}`)
+      const response = await fetch(`/api/User/username/${encodeURIComponent(currentUser.value.username)}`)
       if (response.ok) {
-        const profile = await response.json()
+        const json = await response.json()
+        const profile = json.data || json
         userProfile.value.suggestedCalories = profile.suggestedCalories || 2456
         userProfile.value.suggestedCarbs = profile.suggestedCarbs || 246
         userProfile.value.suggestedFat = profile.suggestedFat || 68
@@ -387,25 +379,14 @@ onMounted(async () => {
   font-size: 1.5rem;
 }
 
-.summary-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
-}
-
-.summary-card {
+.no-entries-today {
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
   background: #f8f9fa;
-  padding: 1.5rem;
-  border-radius: 8px;
-  text-align: center;
-  border: 1px solid #e9ecef;
-}
-
-.summary-card h4 {
-  color: #495057;
-  margin-bottom: 0.5rem;
-  font-size: 1rem;
-  font-weight: 500;
+  border-left: 4px solid #adb5bd;
+  border-radius: 4px;
+  color: #6c757d;
+  font-size: 0.95rem;
 }
 
 .summary-value {

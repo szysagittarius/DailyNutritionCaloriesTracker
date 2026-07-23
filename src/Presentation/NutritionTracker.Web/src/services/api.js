@@ -1,10 +1,12 @@
-// API Base URL - Update this to match your backend port
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://localhost:7155';
+// API Base URL. Leave empty to use the Vite dev server proxy.
+const API_BASE_URL = import.meta.env.VITE_API_URL ?? '';
+
+const buildUrl = (path) => `${API_BASE_URL}${path}`;
 
 const api = {
   // ==================== User Management ====================
   async createUser(userData) {
-    const response = await fetch(`${API_BASE_URL}/api/User/createuser`, {
+    const response = await fetch(buildUrl('/api/users'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -24,7 +26,7 @@ const api = {
   },
 
   async login(loginData) {
-    const response = await fetch(`${API_BASE_URL}/api/User/login`, {
+    const response = await fetch(buildUrl('/api/user/login'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -75,7 +77,7 @@ const api = {
 
   // ==================== Food Nutrition ====================
   async getFoodNutrition() {
-    const response = await fetch(`${API_BASE_URL}/api/FoodNutrition`);
+    const response = await fetch(buildUrl('/api/FoodNutrition'));
     
     if (!response.ok) {
       throw new Error('Failed to fetch food nutrition data');
@@ -85,7 +87,7 @@ const api = {
   },
 
   async addFoodNutrition(nutritionData) {
-    const response = await fetch(`${API_BASE_URL}/api/FoodNutrition`, {
+    const response = await fetch(buildUrl('/api/FoodNutrition'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -102,7 +104,7 @@ const api = {
 
   // ==================== Food Log (NEW Hexagonal API) ====================
   async getFoodLogsByUser(userId) {
-    const response = await fetch(`${API_BASE_URL}/api/FoodLog/user/${userId}`);
+    const response = await fetch(buildUrl(`/api/FoodLog/user/${userId}`));
     
     if (!response.ok) {
       throw new Error('Failed to fetch food logs');
@@ -112,7 +114,7 @@ const api = {
   },
 
   async createFoodLog(foodLogData) {
-    const response = await fetch(`${API_BASE_URL}/api/FoodLog`, {
+    const response = await fetch(buildUrl('/api/FoodLog'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -130,7 +132,7 @@ const api = {
 
   // ==================== Generic Methods ====================
   async get(endpoint) {
-    const response = await fetch(`${API_BASE_URL}${endpoint}`);
+    const response = await fetch(buildUrl(endpoint));
     
     if (!response.ok) {
       throw new Error(`Failed to fetch from ${endpoint}`);
@@ -140,7 +142,7 @@ const api = {
   },
 
   async post(endpoint, data) {
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    const response = await fetch(buildUrl(endpoint), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

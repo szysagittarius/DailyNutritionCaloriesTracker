@@ -50,3 +50,12 @@ public class UpdateUserRequest
     [Range(0, double.MaxValue, ErrorMessage = "Suggested protein must be positive")]
     public double? SuggestedProtein { get; set; }
 }
+
+public class LoginRequest
+{
+    [Required(ErrorMessage = "Username is required")]
+    public string Username { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Password is required")]
+    public string Password { get; set; } = string.Empty;
+}

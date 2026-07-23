@@ -144,7 +144,7 @@ Presentation → Input Adapters → Application ← Output Adapters
    dotnet restore
    ```
 
-2. **Create database migration**:
+2. **Create database migration** (once, or after model changes):
    ```powershell
    cd Adapters/Output/NutritionTracker.SqlServer
    dotnet ef migrations add InitialCreate --startup-project ../../Input/NutritionTracker.RestApi
@@ -155,14 +155,34 @@ Presentation → Input Adapters → Application ← Output Adapters
    dotnet ef database update --startup-project ../../Input/NutritionTracker.RestApi
    ```
 
-4. **Run the API**:
+   > **Schema note**: This project uses the **`dbo`** schema (SQL Server default — no `HasDefaultSchema` call in `DbContext`).
+   > The `legacy` project set `modelBuilder.HasDefaultSchema("Nutrition")`, so its tables live under `[Nutrition].*`.
+   > See: `src/Adapters/Output/NutritionTracker.SqlServer/Data/NutritionTrackerDbContext.cs` vs `legacy/NT.Database/Context/NutritionTrackerDbContext.cs`.
+
+3a. **Seed food nutrition data** (run once after migration):
+   ```powershell
+   # sqlcmd example — adjust server/auth flags as needed
+   sqlcmd -S HP-ZS -d NutritionTracker -E -i Adapters/Output/NutritionTracker.SqlServer/SeedData/seed_food_nutrition.sql
+   ```
+   Source JSON: `legacy/DailyNutritionCaloriesTracker.Server/App_data/food_nutritional_values.json` (15 items).
+   Script is idempotent — safe to re-run.
+
+4. **Run the REST API**:
    ```powershell
    cd ../../../Adapters/Input/NutritionTracker.RestApi
    dotnet run
    ```
+   Verify at `https://localhost:7155/swagger`.
 
-5. **Access Swagger UI**:
-   - Open browser: `https://localhost:5001/swagger` (or check console output for port)
+5. **Alternative: Run Azure Functions adapter** (skips SQL Server; uses Azure Table Storage):
+   ```powershell
+   # Start Azurite table emulator first
+   azurite --tableHost 127.0.0.1 --tablePort 10002
+
+   cd ../../../Adapters/Input/NutritionTracker.AzureFunctions
+   func start --port 7071
+   ```
+   Set `VITE_API_TARGET=http://127.0.0.1:7071` in the frontend `.env` files when using this adapter.
 
 ## Running the Frontend
 
@@ -184,7 +204,41 @@ Presentation → Input Adapters → Application ← Output Adapters
 4. **Access the application**:
    - Open browser: `https://localhost:5173`
 
-**Note**: Make sure the backend API is running on `https://localhost:7155` before starting the frontend.
+**Note**: Make sure the chosen backend is running before starting the frontend.
+- REST API: `https://localhost:7155` (default, uses SQL Server)
+- Azure Functions: `http://127.0.0.1:7071` (alternative, uses Azure Table Storage)
+
+#### Frontend port & backend target (`.env` files)
+
+File: `Presentation/NutritionTracker.Web/.env` (and `.env.development`)
+
+```env
+VITE_API_URL=                           # keep empty — see proxy explanation below
+VITE_API_TARGET=https://localhost:7155  # REST API default; change to switch backend
+```
+
+| Variable | Role |
+|---|---|
+| `VITE_API_URL` | Injected into `api.js` at build time. **Keep empty** so all API calls use relative paths. |
+| `VITE_API_TARGET` | Read by `vite.config.js`. Points the Vite proxy at the real backend. |
+
+**How the Vite proxy eliminates CORS issues:**
+
+```
+Browser  →  Vite dev server (:5173)  →  Backend (:7155 or :7071)
+         ←────── response ──────────────────────────────────────
+```
+
+When `VITE_API_URL` is empty, `api.js` produces relative paths (e.g. `/api/user/login`). The browser sends those to `https://localhost:5173` — the **same origin** as the page — so no CORS preflight fires. The Vite server then proxies the request to `VITE_API_TARGET` transparently. Setting `VITE_API_URL` to the backend address directly would make every request cross-origin and require CORS headers on the backend.
+
+To switch backend, update only one env variable — no code changes:
+```env
+# REST API (default)
+VITE_API_TARGET=https://localhost:7155
+
+# Azure Functions (alternative)
+VITE_API_TARGET=http://127.0.0.1:7071
+```
 
 ## API Endpoints
 

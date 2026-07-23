@@ -181,7 +181,7 @@ const paginatedItems = computed(() => {
 const fetchNutritionData = async () => {
   try {
     console.log('Fetching nutrition data...')
-    const response = await fetch('foodnutrition', {
+    const response = await fetch('/api/FoodNutrition', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json'
@@ -194,7 +194,8 @@ const fetchNutritionData = async () => {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
     
-    const data = await response.json()
+    const json = await response.json()
+    const data = json.data || json
     console.log('Response data:', data)
     
     nutritionItems.value = Array.isArray(data) ? data : []
@@ -209,7 +210,7 @@ const submitForm = async () => {
   isSubmitting.value = true
   try {
     console.log('Submitting form data:', formData.value)
-    const response = await fetch('foodnutrition', {
+    const response = await fetch('/api/FoodNutrition', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
