@@ -5,6 +5,7 @@
     import FoodLogPage from './components/MyFoodLog.vue'
     import ProfilePage from './components/MyProfile.vue'
     import NutritionManagement from './components/NutritionManagement.vue'
+    import AdminPanel from './components/AdminPanel.vue'
     import { ref, onMounted } from 'vue'
     import { useRouter } from 'vue-router'
     import api from './services/api'
@@ -78,6 +79,7 @@
               Food Log
             </li>
             <li class="user-info">
+              <button class="admin-tab-btn" :class="{ active: activeTab === 'admin' }" @click="setActiveTab('admin')">⚙ Admin</button>
               <span>Welcome, {{ currentUser?.username || 'User' }}!</span>
               <button @click="handleLogout" class="logout-btn">Logout</button>
             </li>
@@ -101,6 +103,11 @@
         <!-- Food Log Page -->
         <div v-else-if="activeTab === 'foodlog'" class="food-log-content">
           <FoodLogPage />
+        </div>
+
+        <!-- Admin Panel -->
+        <div v-else-if="activeTab === 'admin'" class="admin-content-wrapper">
+          <AdminPanel />
         </div>
         
         <!-- Main Content for home tab -->
@@ -231,6 +238,28 @@ header {
 
 .logout-btn:hover {
   background-color: #c82333;
+}
+
+/* Admin tab button — sits inside user-info, styled distinctly */
+.admin-tab-btn {
+  padding: 0.4rem 0.8rem;
+  background-color: #334155;
+  color: #e2e8f0;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.2s;
+}
+.admin-tab-btn:hover  { background-color: #475569; }
+.admin-tab-btn.active { background-color: #3b82f6; color: #fff; }
+
+/* Admin panel takes full remaining viewport, no extra padding */
+.admin-content-wrapper {
+  width: 100%;
+  max-width: none;
+  padding: 0;
+  margin: 0;
 }
 
 /* Main content sits below the fixed header */

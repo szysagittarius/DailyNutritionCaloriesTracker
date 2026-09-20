@@ -15,11 +15,13 @@ parameters:
 
 variables:
   azureLocation: 'eastus'
+  swaLocation: 'eastus2' # Static Web Apps Free tier is only available in a subset of regions
   resourceGroupPrefix: 'rg-nutrition-tracker'
   resourceGroup: '${{ variables.resourceGroupPrefix }}-${{ parameters.environment }}'
   storageAccount: 'stnutritiontracker${{ parameters.environment }}'
   functionApp: 'func-nutrition-tracker-${{ parameters.environment }}'
   appServicePlan: 'asp-nutrition-tracker-${{ parameters.environment }}'
+  staticWebApp: 'swa-nutrition-tracker-${{ parameters.environment }}'
 
 pool:
   vmImage: 'ubuntu-latest'
@@ -112,6 +114,23 @@ stages:
                   --allowed-origins "*"
 
           - task: AzureCLI@2
+            displayName: 'Create Static Web App (Free tier)'
+            inputs:
+              azureSubscription: '$(azureServiceConnection)'
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                if az staticwebapp show --name $(staticWebApp) --resource-group $(resourceGroup) &>/dev/null; then
+                  echo "Static Web App $(staticWebApp) already exists, skipping"
+                else
+                  az staticwebapp create \
+                    --name $(staticWebApp) \
+                    --resource-group $(resourceGroup) \
+                    --location $(swaLocation) \
+                    --sku Free
+                fi
+
+          - task: AzureCLI@2
             displayName: 'Output deployment information'
             inputs:
               azureSubscription: '$(azureServiceConnection)'
@@ -122,12 +141,19 @@ stages:
                   --name $(functionApp) \
                   --resource-group $(resourceGroup) \
                   --query defaultHostName -o tsv)
-                
+
+                SWA_URL=$(az staticwebapp show \
+                  --name $(staticWebApp) \
+                  --query defaultHostname -o tsv)
+
                 echo "##[section]Deployment Summary"
                 echo "Environment: ${{ parameters.environment }}"
                 echo "Resource Group: $(resourceGroup)"
                 echo "Storage Account: $(storageAccount)"
                 echo "Function App: $(functionApp)"
                 echo "Function URL: https://$FUNCTION_URL"
-                
+                echo "Static Web App: $(staticWebApp)"
+                echo "Web URL: https://$SWA_URL"
+
                 echo "##vso[task.setvariable variable=functionUrl;isOutput=true]https://$FUNCTION_URL"
+                echo "##vso[task.setvariable variable=webUrl;isOutput=true]https://$SWA_URL"

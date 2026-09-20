@@ -16,18 +16,21 @@ This guide explains how to deploy the Nutrition Tracker application to Azure usi
 
 ## Pipeline Structure
 
-All pipeline files are located in the `deployment/` folder for better organization:
+The real GitHub Actions workflows live in `.github/workflows/` (GitHub requires this). Azure DevOps
+equivalents and manual scripts live under `deployment/`:
 
 ```
+.github/workflows/           # GitHub Actions (self-contained, real logic)
+│   ├── build.yml
+│   ├── deploy-backend.yml
+│   ├── deploy-frontend.yml
+│   └── infrastructure.yml
 deployment/
-├── pipelines/              # CI/CD pipeline YAML files
-│   ├── build-and-test.yml              # GitHub Actions
-│   ├── infrastructure.yml               # GitHub Actions
-│   ├── deploy-azure-functions.yml      # GitHub Actions
+├── pipelines/               # Azure DevOps pipeline YAML files
 │   ├── azure-devops-build.yml          # Azure DevOps
 │   ├── azure-devops-infrastructure.yml # Azure DevOps
 │   └── azure-devops-deploy.yml         # Azure DevOps
-└── scripts/                # Deployment helper scripts
+└── scripts/                 # Deployment helper scripts
     ├── create-service-principal.sh
     ├── deploy-infrastructure.sh
     └── deploy-application.sh
@@ -51,14 +54,15 @@ This creates:
 - Azure Storage Account (for Table Storage)
 - Azure Function App (Consumption Plan - FREE tier)
 - Storage Account for Functions runtime
+- Azure Static Web App (Free tier, for frontend hosting)
 
-#### Step 2: Configure GitHub Secrets
+#### Step 2: Configure GitHub Secrets & Variables
 
-After infrastructure deployment, add these secrets to GitHub:
+After infrastructure deployment, add these to GitHub:
 
 **Repository Settings → Secrets and variables → Actions**
 
-1. **AZURE_CREDENTIALS**: Service Principal credentials
+1. **AZURE_CREDENTIALS** (secret): Service Principal credentials
    ```json
    {
      "clientId": "<client-id>",
@@ -68,23 +72,27 @@ After infrastructure deployment, add these secrets to GitHub:
    }
    ```
 
-2. **AZURE_FUNCTIONAPP_PUBLISH_PROFILE**: 
+2. **AZURE_FUNCTIONAPP_PUBLISH_PROFILE** (secret):
    - Download from workflow artifacts or Azure Portal
    - Function App → Get publish profile
    - Copy entire XML content
 
-3. **AZURE_RESOURCE_GROUP**: Resource group name (e.g., `rg-nutrition-tracker-dev`)
+3. **AZURE_STATIC_WEB_APPS_API_TOKEN** (secret):
+   - Download the `static-web-app-token` artifact from the Infrastructure workflow run,
+     or run `az staticwebapp secrets list --name swa-nutrition-tracker-dev --query "properties.apiKey" -o tsv`
+
+4. **FUNCTION_APP_URL** (repository **variable**, not secret):
+   - e.g. `https://func-nutrition-tracker-dev.azurewebsites.net`
 
 #### Step 3: Deploy Application Code
 
 1. Push to `main` branch, OR
-2. Run workflow: **"Deploy Azure Functions"** manually from Actions tab
+2. Run workflow: **"Deploy Backend (Azure Functions)"** / **"Deploy Frontend (Static Web App)"** manually
 
-The pipeline automatically:
-- Builds the solution
-- Runs tests
-- Publishes Azure Functions
-- Deploys to Azure
+The pipelines automatically:
+- Build the solution / Vue app
+- Run tests (backend)
+- Publish and deploy to Azure
 
 ### Option 1b: Azure DevOps Pipelines
 
@@ -239,14 +247,31 @@ curl -X POST "$FUNCTION_URL/api/users" \
   }'
 ```
 
-### 3. Update Frontend Configuration
+### 3. Configure Frontend to Use the Deployed API
 
-Update Vue.js API base URL:
+The frontend already reads its API base URL from the `VITE_API_URL` build-time environment variable
+(see `src/Presentation/NutritionTracker.Web/src/services/api.js`) — no code changes needed.
 
-**src/services/api.js:**
-```javascript
-const API_BASE_URL = 'https://func-nutrition-tracker-dev.azurewebsites.net/api';
+- **Local dev**: leave `VITE_API_URL` empty in `.env.development` (uses the Vite dev server proxy)
+- **CI/CD build**: `deploy-frontend.yml` sets it from the `FUNCTION_APP_URL` repository variable
+- **Manual build**: `VITE_API_URL=https://func-nutrition-tracker-dev.azurewebsites.net npm run build`
+
+#### Deploy the frontend to Azure Static Web Apps
+
+```bash
+# One-time: create the Static Web App (also done automatically by infrastructure.yml)
+az staticwebapp create \
+  --name swa-nutrition-tracker-dev \
+  --resource-group rg-nutrition-tracker-dev \
+  --location eastus2 \
+  --sku Free
+
+# Get the deployment token and add it as GitHub secret AZURE_STATIC_WEB_APPS_API_TOKEN
+az staticwebapp secrets list --name swa-nutrition-tracker-dev --query "properties.apiKey" -o tsv
 ```
+
+Once the secret and `FUNCTION_APP_URL` variable are set, push to `main` and `deploy-frontend.yml`
+builds and deploys the Vue app automatically.
 
 ### 4. Monitor Application
 
@@ -287,11 +312,13 @@ az functionapp config appsettings set \
 ### Free Tier (First 12 months)
 - **Azure Functions**: 1M requests/month FREE forever
 - **Azure Table Storage**: 5GB storage + 20K operations FREE first year
+- **Azure Static Web Apps (Free SKU)**: hosting + 100GB bandwidth/month FREE forever
 - **Estimated cost**: $0-0.05/month
 
 ### After Free Tier
 - **Azure Functions**: $0.20 per million executions
 - **Azure Table Storage**: $0.045 per GB/month + $0.00036 per 10K operations
+- **Azure Static Web Apps (Free SKU)**: still $0 — no expiry
 - **Estimated cost**: $0.50-2.00/month (based on moderate usage)
 
 ## Troubleshooting
@@ -351,28 +378,31 @@ The functions will use `UseDevelopmentStorage=true` from `local.settings.json`.
 
 ## CI/CD Pipeline Overview
 
-### Build and Test Pipeline
-- Triggers on push to main/develop branches
+### Build and Test (`build.yml`)
+- Triggers on push/PR to `main`
 - Runs unit tests
 - Publishes build artifacts
 
-### Infrastructure Pipeline
-- Manual trigger only
-- Creates all Azure resources
-- Outputs deployment information
+### Infrastructure (`infrastructure.yml`)
+- Manual trigger by default (`workflow_dispatch`, choose dev/staging/production)
+- Also auto-runs when the infra script/workflow itself changes
+- Creates all Azure resources (idempotent — safe to re-run)
 
-### Deploy Pipeline
-- Triggers on push to main (after successful build)
+### Deploy Backend (`deploy-backend.yml`)
+- Triggers on push to `main` when backend/Core paths change
 - Deploys Azure Functions to Azure
-- Validates deployment
+
+### Deploy Frontend (`deploy-frontend.yml`)
+- Triggers on push to `main` when frontend paths change
+- Builds and deploys the Vue app to the Static Web App
+- PRs get their own preview environment
 
 ## Next Steps
 
-1. ✅ Run Infrastructure pipeline to create Azure resources
-2. ✅ Configure GitHub secrets
-3. ✅ Run Deploy pipeline to deploy application
-4. ✅ Test API endpoints
-5. ✅ Update frontend configuration
-6. ⏭️ Setup custom domain (optional)
-7. ⏭️ Configure Application Insights
-8. ⏭️ Implement authentication
+1. ✅ Run Infrastructure workflow to create Azure resources
+2. ✅ Configure GitHub secrets and the `FUNCTION_APP_URL` variable
+3. ✅ Push to `main` (or run Deploy workflows manually) to deploy backend + frontend
+4. ✅ Test API endpoints and the live web app
+5. ⏭️ Setup custom domain (optional, free on Static Web Apps)
+6. ⏭️ Configure Application Insights
+7. ⏭️ Implement authentication

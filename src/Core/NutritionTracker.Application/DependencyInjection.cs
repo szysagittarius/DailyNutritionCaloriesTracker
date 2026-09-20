@@ -22,6 +22,7 @@ public static class DependencyInjection
         services.AddScoped<GetUserByUsernameUseCase>();
         services.AddScoped<CreateUserUseCase>();
         services.AddScoped<UpdateUserUseCase>();
+        services.AddScoped<DeleteUserUseCase>();
 
         // Register FoodNutrition use cases
         services.AddScoped<GetAllFoodNutritionUseCase>();

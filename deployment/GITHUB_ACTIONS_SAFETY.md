@@ -136,13 +136,14 @@ Before workflows can deploy to Azure, you need GitHub Secrets configured:
 
 Go to: **Repository → Settings → Secrets and variables → Actions**
 
-### Required Secrets
+### Required Secrets & Variables
 
-| Secret Name | Required For | What Happens Without It |
-|-------------|--------------|-------------------------|
-| `AZURE_CREDENTIALS` | All Azure deployments | ❌ Workflow fails at Azure login |
-| `AZURE_FUNCTIONAPP_PUBLISH_PROFILE` | Application deployment | ❌ Workflow fails at deploy step |
-| `AZURE_RESOURCE_GROUP` | Infrastructure & Deploy | ❌ Workflow fails - can't find resources |
+| Name | Kind | Required For | What Happens Without It |
+|------|------|--------------|--------------------------|
+| `AZURE_CREDENTIALS` | Secret | `infrastructure.yml` (Azure login) | ❌ Workflow fails at Azure login |
+| `AZURE_FUNCTIONAPP_PUBLISH_PROFILE` | Secret | `deploy-backend.yml` | ❌ Workflow fails at deploy step |
+| `AZURE_STATIC_WEB_APPS_API_TOKEN` | Secret | `deploy-frontend.yml` | ❌ Workflow fails at deploy step |
+| `FUNCTION_APP_URL` | Repository variable | `deploy-frontend.yml` (build-time API URL) | ⚠️ Frontend builds with no API URL, calls fail at runtime |
 
 ### Safe Testing Without Secrets
 
@@ -170,21 +171,28 @@ jobs:
         run: # deploy commands
 ```
 
-## Current Repository Status
+## Current Repository Status (as configured now)
 
 ### What You Have Now
 
 ```
 .github/workflows/
-├── build.yml          ⚠️ Will trigger on: push to main/develop
-├── deploy.yml         ⚠️ Will trigger on: push to main
-└── infrastructure.yml ✅ Safe: workflow_dispatch only (manual)
-
-deployment/pipelines/
-├── build-and-test.yml           ← Actual CI logic (called by build.yml)
-├── deploy-azure-functions.yml   ← Actual CD logic (called by deploy.yml)
-└── infrastructure.yml            ← Actual infra logic (called by infrastructure.yml)
+├── build.yml            ⚠️ Auto-triggers on: push/PR to main (self-contained CI logic)
+├── deploy-backend.yml   ⚠️ Auto-triggers on: push to main, only when backend/Core paths change
+├── deploy-frontend.yml  ⚠️ Auto-triggers on: push to main, only when frontend paths change
+└── infrastructure.yml   ✅ Manual by default (workflow_dispatch); auto-runs only if the
+                            infra script/workflow file itself changes
 ```
+
+All four workflows are fully self-contained — there is no more separate `deployment/pipelines/*.yml`
+indirection for GitHub Actions (GitHub requires reusable workflow files to live directly in
+`.github/workflows/`, so that split never actually worked). `deployment/pipelines/azure-devops-*.yml`
+remain as the Azure DevOps equivalents.
+
+**Before your first push**, make sure these are configured (see [AZURE_SETUP.md](AZURE_SETUP.md)):
+- Run **Deploy Infrastructure** manually once (`workflow_dispatch`) to create the Azure resources
+- Add secrets: `AZURE_CREDENTIALS`, `AZURE_FUNCTIONAPP_PUBLISH_PROFILE`, `AZURE_STATIC_WEB_APPS_API_TOKEN`
+- Add repository variable: `FUNCTION_APP_URL`
 
 ### What Happens When You Push This Repository
 
@@ -198,28 +206,22 @@ deployment/pipelines/
    **Result**:
    - ⚠️ `build.yml` will trigger immediately (detects push to main)
    - ⚠️ May fail if you don't have secrets configured
-   - ✅ `infrastructure.yml` will NOT trigger (manual only)
-   - ⚠️ `deploy.yml` will trigger if build succeeds
+   - ✅ `infrastructure.yml` will NOT trigger automatically unless you also changed the infra script
+   - ⚠️ `deploy-backend.yml` / `deploy-frontend.yml` will trigger if their watched paths changed
 
 2. **Subsequent Pushes to Main**:
-   - Every push triggers build + deploy
+   - Every push triggers `build.yml`
+   - `deploy-backend.yml` / `deploy-frontend.yml` only trigger when their respective folders change
    - Could rack up GitHub Actions minutes
-   - Could deploy broken code
+   - Could deploy broken code if you push straight to `main` without review
 
 ## Recommended First-Time Setup
 
-### Step 1: Initial Push with Safe Configuration
+### Step 1: Run Infrastructure First (Manual)
 
-**Before pushing**, modify workflows to be manual-only:
-
-```yaml
-# .github/workflows/build.yml (temporarily disable auto-trigger)
-on:
-  workflow_dispatch:
-  # push:           ← Comment out
-  #   branches:     ← Comment out
-  #     - main      ← Comment out
-```
+Before your first code push, run **Deploy Infrastructure** manually from the Actions tab
+(`workflow_dispatch`, environment = `dev`). This creates the Function App, Storage Account, and
+Static Web App so the deploy workflows have somewhere to deploy to.
 
 ### Step 2: Configure Secrets
 
@@ -229,27 +231,21 @@ on:
    ./create-service-principal.sh
    ```
 
-2. Add secrets to GitHub (Settings → Secrets)
+2. Add secrets to GitHub (Settings → Secrets and variables → Actions):
+   - `AZURE_CREDENTIALS`, `AZURE_FUNCTIONAPP_PUBLISH_PROFILE`, `AZURE_STATIC_WEB_APPS_API_TOKEN`
+   - Repository variable `FUNCTION_APP_URL`
 
-### Step 3: Test Manually
+### Step 3: Test Manually First
 
 1. Go to Actions tab
-2. Run "Deploy Infrastructure" workflow
+2. Run "Deploy Infrastructure" workflow (if not already run in Step 1)
 3. Run "Build and Test" workflow
-4. Run "Deploy" workflow
+4. Run "Deploy Backend (Azure Functions)" / "Deploy Frontend (Static Web App)" workflows
 
-### Step 4: Enable Auto-Triggers
+### Step 4: Push to Main
 
-Once everything works, uncomment:
-
-```yaml
-# .github/workflows/build.yml
-on:
-  workflow_dispatch:
-  push:              # ← Uncomment
-    branches:        # ← Uncomment
-      - main         # ← Uncomment
-```
+Once the manual runs succeed, push to `main` — `build.yml`, `deploy-backend.yml`, and
+`deploy-frontend.yml` will run automatically from then on (path-filtered, as shown above).
 
 ## Quick Reference
 
@@ -273,8 +269,9 @@ on:
 | Workflow | Duration | Minutes Used | Cost (Private Repo) |
 |----------|----------|--------------|---------------------|
 | Build & Test | ~3 min | 3 | $0.024 |
-| Deploy | ~5 min | 5 | $0.040 |
-| Infrastructure | ~2 min | 2 | $0.016 |
+| Deploy Backend | ~5 min | 5 | $0.040 |
+| Deploy Frontend | ~2 min | 2 | $0.016 |
+| Infrastructure | ~2 min | 2 | $0.016 (rarely runs) |
 
 **Per deployment cycle**: ~10 minutes (~$0.08 if private)
 

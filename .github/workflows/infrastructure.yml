@@ -12,11 +12,188 @@ on:
           - dev
           - staging
           - production
+  push:
+    branches: [main]
+    # Only re-run automatically when the infra definition itself changes, not on every app code push
+    paths:
+      - 'deployment/scripts/deploy-infrastructure.sh'
+      - '.github/workflows/infrastructure.yml'
+
+env:
+  AZURE_LOCATION: 'eastus'
+  # Static Web Apps Free tier is only available in a subset of regions
+  SWA_LOCATION: 'eastus2'
+  RESOURCE_GROUP_PREFIX: 'rg-nutrition-tracker'
 
 jobs:
-  deploy:
-    uses: ./.github/workflows/call-pipeline.yml
-    with:
-      pipeline-file: deployment/pipelines/infrastructure.yml
-      environment: ${{ inputs.environment }}
-    secrets: inherit
+  deploy-infrastructure:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Azure Login
+      uses: azure/login@v2
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Set environment variables
+      run: |
+        ENVIRONMENT="${{ inputs.environment || 'dev' }}"
+        echo "ENVIRONMENT=$ENVIRONMENT" >> $GITHUB_ENV
+        echo "RESOURCE_GROUP=${{ env.RESOURCE_GROUP_PREFIX }}-$ENVIRONMENT" >> $GITHUB_ENV
+        echo "STORAGE_ACCOUNT=stnutritiontracker$ENVIRONMENT" >> $GITHUB_ENV
+        echo "FUNCTION_APP=func-nutrition-tracker-$ENVIRONMENT" >> $GITHUB_ENV
+        echo "STATIC_WEB_APP=swa-nutrition-tracker-$ENVIRONMENT" >> $GITHUB_ENV
+
+    - name: Create Resource Group
+      uses: azure/CLI@v2
+      with:
+        inlineScript: |
+          az group create \
+            --name ${{ env.RESOURCE_GROUP }} \
+            --location ${{ env.AZURE_LOCATION }}
+
+    - name: Create Storage Account (Table Storage)
+      uses: azure/CLI@v2
+      with:
+        inlineScript: |
+          if az storage account show --name ${{ env.STORAGE_ACCOUNT }} --resource-group ${{ env.RESOURCE_GROUP }} &>/dev/null; then
+            echo "Storage account ${{ env.STORAGE_ACCOUNT }} already exists, skipping"
+          else
+            az storage account create \
+              --name ${{ env.STORAGE_ACCOUNT }} \
+              --resource-group ${{ env.RESOURCE_GROUP }} \
+              --location ${{ env.AZURE_LOCATION }} \
+              --sku Standard_LRS \
+              --kind StorageV2 \
+              --allow-blob-public-access false \
+              --min-tls-version TLS1_2
+          fi
+
+    - name: Create Function App (Consumption Plan)
+      uses: azure/CLI@v2
+      with:
+        inlineScript: |
+          FUNC_STORAGE_ACCOUNT="stfunc$(echo ${{ env.FUNCTION_APP }} | sed 's/-//g' | cut -c1-17)"
+
+          if az storage account show --name $FUNC_STORAGE_ACCOUNT --resource-group ${{ env.RESOURCE_GROUP }} &>/dev/null; then
+            echo "Storage account $FUNC_STORAGE_ACCOUNT already exists, skipping"
+          else
+            az storage account create \
+              --name $FUNC_STORAGE_ACCOUNT \
+              --resource-group ${{ env.RESOURCE_GROUP }} \
+              --location ${{ env.AZURE_LOCATION }} \
+              --sku Standard_LRS
+          fi
+
+          if az functionapp show --name ${{ env.FUNCTION_APP }} --resource-group ${{ env.RESOURCE_GROUP }} &>/dev/null; then
+            echo "Function App ${{ env.FUNCTION_APP }} already exists, skipping"
+          else
+            az functionapp create \
+              --name ${{ env.FUNCTION_APP }} \
+              --resource-group ${{ env.RESOURCE_GROUP }} \
+              --consumption-plan-location ${{ env.AZURE_LOCATION }} \
+              --storage-account $FUNC_STORAGE_ACCOUNT \
+              --runtime dotnet-isolated \
+              --runtime-version 8 \
+              --functions-version 4 \
+              --os-type Linux
+          fi
+
+    - name: Configure Function App Settings
+      uses: azure/CLI@v2
+      with:
+        inlineScript: |
+          TABLE_CONNECTION_STRING=$(az storage account show-connection-string \
+            --name ${{ env.STORAGE_ACCOUNT }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --query connectionString -o tsv)
+
+          az functionapp config appsettings set \
+            --name ${{ env.FUNCTION_APP }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --settings \
+              "AzureTableStorageConnectionString=$TABLE_CONNECTION_STRING" \
+              "FUNCTIONS_WORKER_RUNTIME=dotnet-isolated"
+
+          # CORS "*" is fine for a free-tier personal project; replace with the Static Web App URL for tighter security
+          az functionapp cors add \
+            --name ${{ env.FUNCTION_APP }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --allowed-origins "*"
+
+    - name: Create Static Web App (Free tier)
+      uses: azure/CLI@v2
+      with:
+        inlineScript: |
+          if az staticwebapp show --name ${{ env.STATIC_WEB_APP }} --resource-group ${{ env.RESOURCE_GROUP }} &>/dev/null; then
+            echo "Static Web App ${{ env.STATIC_WEB_APP }} already exists, skipping"
+          else
+            az staticwebapp create \
+              --name ${{ env.STATIC_WEB_APP }} \
+              --resource-group ${{ env.RESOURCE_GROUP }} \
+              --location ${{ env.SWA_LOCATION }} \
+              --sku Free
+          fi
+
+    - name: Output deployment information
+      uses: azure/CLI@v2
+      with:
+        inlineScript: |
+          FUNCTION_URL=$(az functionapp show \
+            --name ${{ env.FUNCTION_APP }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --query defaultHostName -o tsv)
+
+          SWA_URL=$(az staticwebapp show \
+            --name ${{ env.STATIC_WEB_APP }} \
+            --query defaultHostname -o tsv)
+
+          echo "### Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment**: ${{ env.ENVIRONMENT }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Resource Group**: ${{ env.RESOURCE_GROUP }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Storage Account**: ${{ env.STORAGE_ACCOUNT }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Function App**: ${{ env.FUNCTION_APP }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Function URL**: https://$FUNCTION_URL" >> $GITHUB_STEP_SUMMARY
+          echo "- **Static Web App**: ${{ env.STATIC_WEB_APP }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Web URL**: https://$SWA_URL" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Next Steps:**" >> $GITHUB_STEP_SUMMARY
+          echo "1. Add secret AZURE_FUNCTIONAPP_PUBLISH_PROFILE from the 'publish-profile' artifact below" >> $GITHUB_STEP_SUMMARY
+          echo "2. Add secret AZURE_STATIC_WEB_APPS_API_TOKEN from the 'static-web-app-token' artifact below" >> $GITHUB_STEP_SUMMARY
+          echo "3. Add repository variable FUNCTION_APP_URL = https://$FUNCTION_URL" >> $GITHUB_STEP_SUMMARY
+          echo "4. Push to main (or run the Build/Deploy workflows) to deploy application code" >> $GITHUB_STEP_SUMMARY
+
+    - name: Get Function App publish profile
+      uses: azure/CLI@v2
+      with:
+        inlineScript: |
+          az functionapp deployment list-publishing-profiles \
+            --name ${{ env.FUNCTION_APP }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --xml > publish-profile.xml
+
+    - name: Upload publish profile
+      uses: actions/upload-artifact@v4
+      with:
+        name: publish-profile
+        path: publish-profile.xml
+        retention-days: 1
+
+    - name: Get Static Web App deployment token
+      uses: azure/CLI@v2
+      with:
+        inlineScript: |
+          az staticwebapp secrets list \
+            --name ${{ env.STATIC_WEB_APP }} \
+            --query "properties.apiKey" -o tsv > swa-token.txt
+
+    - name: Upload Static Web App token
+      uses: actions/upload-artifact@v4
+      with:
+        name: static-web-app-token
+        path: swa-token.txt
+        retention-days: 1

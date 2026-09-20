@@ -15,6 +15,7 @@ public class UserController : ControllerBase
     private readonly GetUserByUsernameUseCase _getUserByUsernameUseCase;
     private readonly CreateUserUseCase _createUserUseCase;
     private readonly UpdateUserUseCase _updateUserUseCase;
+    private readonly DeleteUserUseCase _deleteUserUseCase;
     private readonly ILogger<UserController> _logger;
 
     public UserController(
@@ -23,6 +24,7 @@ public class UserController : ControllerBase
         GetUserByUsernameUseCase getUserByUsernameUseCase,
         CreateUserUseCase createUserUseCase,
         UpdateUserUseCase updateUserUseCase,
+        DeleteUserUseCase deleteUserUseCase,
         ILogger<UserController> logger)
     {
         _getAllUsersUseCase = getAllUsersUseCase;
@@ -30,6 +32,7 @@ public class UserController : ControllerBase
         _getUserByUsernameUseCase = getUserByUsernameUseCase;
         _createUserUseCase = createUserUseCase;
         _updateUserUseCase = updateUserUseCase;
+        _deleteUserUseCase = deleteUserUseCase;
         _logger = logger;
     }
 
@@ -225,6 +228,27 @@ public class UserController : ControllerBase
         {
             _logger.LogError(ex, "Error occurred while updating user with ID {UserId}", id);
             return StatusCode(500, ApiResponse<UserResponse>.FailureResult("An error occurred while updating the user"));
+        }
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<ActionResult<ApiResponse<object>>> Delete(Guid id)
+    {
+        try
+        {
+            await _deleteUserUseCase.ExecuteAsync(id);
+            _logger.LogInformation("Deleted user with ID {UserId}", id);
+            return Ok(ApiResponse<object>.SuccessResult("User deleted successfully"));
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning(ex, "User with ID {UserId} not found for deletion", id);
+            return NotFound(ApiResponse<object>.FailureResult(ex.Message));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while deleting user with ID {UserId}", id);
+            return StatusCode(500, ApiResponse<object>.FailureResult("An error occurred while deleting the user"));
         }
     }
 }

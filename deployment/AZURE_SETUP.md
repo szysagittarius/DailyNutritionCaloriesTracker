@@ -34,7 +34,11 @@ Go to: **GitHub Repository → Settings → Secrets and variables → Actions �
 Add these secrets:
 
 1. **AZURE_CREDENTIALS**: (JSON from above)
-2. **AZURE_RESOURCE_GROUP**: `rg-nutrition-tracker-dev` (or your preferred name)
+2. **AZURE_STATIC_WEB_APPS_API_TOKEN**: (obtained after creating the Static Web App, see below)
+
+Add this repository **variable** (not secret) at **Settings → Secrets and variables → Actions → Variables**:
+
+1. **FUNCTION_APP_URL**: `https://func-nutrition-tracker-dev.azurewebsites.net` (baked into the frontend build)
 
 ### Step 3: Run Infrastructure Pipeline
 
@@ -52,12 +56,18 @@ Wait for completion, then download the publish profile artifact.
 2. Open the file and copy entire contents
 3. Add as GitHub Secret: **AZURE_FUNCTIONAPP_PUBLISH_PROFILE**
 
+### Step 4b: Add Static Web App Deployment Token
+
+1. Download `static-web-app-token` from the Infrastructure workflow artifacts (or run
+   `az staticwebapp secrets list --name swa-nutrition-tracker-dev --query "properties.apiKey" -o tsv`)
+2. Add as GitHub Secret: **AZURE_STATIC_WEB_APPS_API_TOKEN**
+
 ### Step 5: Deploy Application
 
 1. Push to `main` branch, OR
-2. Run **"Deploy Azure Functions"** workflow manually
+2. Run **"Deploy Backend (Azure Functions)"** / **"Deploy Frontend (Static Web App)"** workflows manually
 
-Your API is now live! 🎉
+Your API and web app are now live! 🎉
 
 ## Resource Naming Convention
 
@@ -67,6 +77,20 @@ Your API is now live! 🎉
 | Storage Account | `stnutritiontracker{env}` | `stnutritiontrackerdev` |
 | Function Storage | `stfuncnutrition{env}` | `stfuncnutritiondev` |
 | Function App | `func-nutrition-tracker-{env}` | `func-nutrition-tracker-dev` |
+| Static Web App | `swa-nutrition-tracker-{env}` | `swa-nutrition-tracker-dev` |
+
+## Frontend Hosting: Azure Static Web Apps (Free Tier)
+
+The Vue app (`src/Presentation/NutritionTracker.Web`) is hosted on **Azure Static Web Apps**, Free SKU:
+
+- 100 GB bandwidth/month, free
+- Free managed SSL certificate + custom domain support
+- Built-in PR preview environments via `deploy-frontend.yml`
+- **Free tier is only available in a subset of regions** (this repo uses `eastus2`) — check
+  `az staticwebapp create --help` or the Azure portal for the current list
+
+The Static Web App is created automatically by the `infrastructure.yml` workflow / `deploy-infrastructure.sh`
+script alongside the Function App and Storage Account.
 
 ## Cost Breakdown
 
@@ -81,6 +105,9 @@ Your API is now live! 🎉
 - First year (12 months): **FREE** (5GB + 20K operations)
 - Storage: $0.045 per GB/month
 - Operations: $0.00036 per 10K operations
+
+**Azure Static Web Apps (Free SKU):**
+- Hosting, bandwidth (100 GB/month), SSL, custom domain: **FREE forever**
 
 **Expected Monthly Cost:**
 - First year: **$0.00 - $0.05**
@@ -217,13 +244,14 @@ az functionapp restart --name func-nutrition-tracker-dev --resource-group rg-nut
 
 ### Issue: CORS errors from frontend
 ```bash
-# Add your frontend domain
+# Restrict CORS to just the Static Web App domain (recommended once it's live)
+SWA_URL="https://$(az staticwebapp show --name swa-nutrition-tracker-dev --query defaultHostname -o tsv)"
 az functionapp cors add \
   --name func-nutrition-tracker-dev \
   --resource-group rg-nutrition-tracker-dev \
-  --allowed-origins "https://your-frontend.com"
+  --allowed-origins "$SWA_URL"
 
-# For development, allow all (not for production!)
+# For initial development, allow all (not recommended for production!)
 az functionapp cors add \
   --name func-nutrition-tracker-dev \
   --resource-group rg-nutrition-tracker-dev \
@@ -241,11 +269,12 @@ az functionapp config appsettings list \
 
 ## Next Steps
 
-1. ✅ Complete Azure setup
-2. ✅ Deploy application via GitHub Actions
-3. ⏭️ Update Vue.js frontend to use Azure Functions URL
-4. ⏭️ Test all endpoints
-5. ⏭️ Setup custom domain (optional)
-6. ⏭️ Implement authentication (Azure AD B2C)
-7. ⏭️ Setup monitoring and alerts
-8. ⏭️ Create production environment
+1. ✅ Complete Azure setup (Functions + Table Storage + Static Web App)
+2. ✅ Deploy application via GitHub Actions (`deploy-backend.yml` + `deploy-frontend.yml`)
+3. ✅ Frontend already reads the API URL from `VITE_API_URL` / `FUNCTION_APP_URL`
+4. ⏭️ Test all endpoints end-to-end through the Static Web App URL
+5. ⏭️ Tighten Function App CORS to just the Static Web App domain
+6. ⏭️ Setup custom domain (optional, free on Static Web Apps)
+7. ⏭️ Implement authentication (Azure AD B2C)
+8. ⏭️ Setup monitoring and alerts
+9. ⏭️ Create staging/production environments (run Infrastructure workflow with that environment)
