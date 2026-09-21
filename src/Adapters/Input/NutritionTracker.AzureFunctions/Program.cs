@@ -10,8 +10,10 @@ var builder = FunctionsApplication.CreateBuilder(args);
 
 builder.ConfigureFunctionsWebApplication();
 
-// Get connection string from configuration
-var connectionString = builder.Configuration.GetValue<string>("AzureWebJobsStorage") 
+// Use the data connection string for the app's table storage.
+// AzureWebJobsStorage is for the Functions runtime itself and does not hold the app's business tables.
+var connectionString = builder.Configuration.GetValue<string>("AzureTableStorageConnectionString")
+    ?? builder.Configuration.GetValue<string>("AzureWebJobsStorage")
     ?? "UseDevelopmentStorage=true"; // Use Azurite for local development
 
 // Add hexagonal architecture layers
