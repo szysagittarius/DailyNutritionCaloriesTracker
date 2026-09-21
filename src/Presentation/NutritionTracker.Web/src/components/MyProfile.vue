@@ -130,7 +130,7 @@
 </template>
 
 <script>
-import api from '../services/api'
+import api, { buildUrl } from '../services/api'
 
 export default {
   name: 'ProfilePage',
@@ -158,7 +158,7 @@ export default {
       try {
         const currentUser = api.getCurrentUser()
         if (currentUser) {
-          const response = await fetch(`/api/User/username/${encodeURIComponent(currentUser.username)}`)
+          const response = await fetch(buildUrl(`/api/User/username/${encodeURIComponent(currentUser.username)}`))
           
           if (response.ok) {
             const json = await response.json()
@@ -185,7 +185,7 @@ export default {
       try {
         const currentUser = api.getCurrentUser()
         const userId = currentUser?.id
-        const response = await fetch(`/api/User/${userId}`, {
+        const response = await fetch(buildUrl(`/api/User/${userId}`), {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',

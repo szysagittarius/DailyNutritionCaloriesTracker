@@ -142,48 +142,49 @@ func start
 ```
 Uses `UseDevelopmentStorage=true` from `local.settings.json`.
 
-## Cost Estimation
+## Cost & Free-Tier Reality Check
+
+### Quick answer
+
+This setup is meant to stay low-cost for a personal or demo project, and the current architecture is mostly in Azure's free or always-free tiers:
+
+- **GitHub Actions**: free for a public repo, with no hard time limit for typical usage.
+- **Azure Static Web Apps (Free)**: free forever while staying within the free allowance.
+- **Azure Functions (Consumption plan)**: includes an Always Free grant with no time limit.
+- **Azure Table Storage**: not free forever; it is billed by usage.
+- **Cosmos DB Table API free tier**: available as a future option if you want a truly free table option, but it is a different service than classic Table Storage.
+
+### Cost summary
 
 | Service | Free allowance | Beyond free tier |
 |---|---|---|
-| Azure Functions (Consumption) | 1M requests + 400K GB-s/month, forever | $0.20/million executions |
-| Azure Table Storage | 5GB + 20K ops free for 12 months | ~$0.045/GB/month + $0.00036/10K ops |
+| GitHub Actions (public repo) | Unlimited public usage | N/A for public repos |
+| Azure Functions (Consumption) | 1M requests + 400K GB-s/month, forever | ~$0.20/million executions |
 | Azure Static Web Apps (Free SKU) | 100GB bandwidth/month, forever | N/A — no paid tier needed |
+| Azure Table Storage | Not free forever | Pay-as-you-go for capacity + transactions |
+| Cosmos DB Table API | Free tier available on selected accounts | Paid once the free tier limits are exceeded |
 
-**Estimated total**: $0–0.05/month in year one, ~$0.50–2.00/month after.
+**Estimated total for this app**: typically around **$0–$0.05/month** for tiny personal traffic, and only a few dollars/month at a much higher usage level. This is still very low-cost for a small project.
 
-## FAQ: Is everything really free, forever?
+### FAQ: Is everything really free, forever?
 
 **Q: Are the GitHub Actions workflows free?**
-A: Yes, with no time limit — this repo is a **public** GitHub repository, and GitHub does not meter
-Actions minutes at all for public repos (private repos get 2,000 free minutes/month, then billed).
-Verified with `gh repo view --json visibility` → `PUBLIC`.
+A: Yes for this repo. The repository is **public**, and GitHub does not meter Actions minutes for public repositories. That means no time-based lockout for normal CI/CD usage.
 
 **Q: Are the Azure resources free forever, or just for a trial period?**
-A: It depends on the resource — this subscription (`Azure subscription 1`, quota ID
-`PayAsYouGo_2014-09-01`) is a standard **Pay-As-You-Go** subscription, not a brand-new Free
-Trial/Student account, so it does **not** get the "free for 12 months" new-account credits.
-What actually applies here:
-- **Azure Functions (Consumption plan)** — genuinely free forever, no time limit. The 1M
-  requests + 400,000 GB-s/month grant is part of Azure's **Always Free** tier and applies to
-  every subscription (including Pay-As-You-Go), every month, indefinitely. You're only billed if
-  you exceed that grant in a given month.
-- **Azure Static Web Apps (Free SKU)** — also **Always Free**, no time limit, as long as you stay
-  within the tier's limits (100GB bandwidth/month, etc.). This is a permanent $0 pricing tier, not
-  a trial.
-- **Azure Table Storage** — **not** free. Storage accounts are billed pay-as-you-go for capacity
-  and transactions from day one on this subscription type (the "5GB + 20K ops free for 12 months"
-  row above only applies to new Free Trial/Azure-for-Students subscriptions). In practice, a
-  single-user hobby project's storage/transaction volume costs a few **cents per month**, not $0.
-- **Application Insights / Log Analytics** (created alongside the Function App) has its own
-  Always Free ingestion allowance (5GB/month) — fine for this project's traffic, but would start
-  billing if log volume grew significantly.
+A: It depends on the service. This subscription is a standard **Pay-As-You-Go** subscription, not a new free-trial account, so it does not get the special new-account free credits. But the key services here still fit the **Always Free** pricing model:
+- **Azure Functions (Consumption plan)**: always free up to the included grant, month after month.
+- **Azure Static Web Apps (Free SKU)**: permanent free tier for the app hosting layer.
+- **Azure Table Storage**: not free forever; it is billed after the data and transaction volume is used.
+- **Application Insights / Log Analytics**: usually low-cost for a small app, but not unlimited if logs grow a lot.
 
-**Bottom line**: no component here has a hard expiration date or a "trial ends, then you get
-charged full price" cliff. The Consumption Functions plan and the Static Web App are genuinely
-free forever at this usage level; Table Storage is billed but at fractions of a cent/month for a
-personal project. Keep an eye on the Azure Portal's **Cost Management + Billing** blade if you're
-ever unsure.
+**Q: Is Azure Table Storage free for this project?**
+A: Not permanently free. Azure Table Storage is a billed service, even on a standard Pay-As-You-Go subscription. For a small hobby app, the cost is usually only a few cents per month, but it is not free forever.
+
+**Q: If I want a truly free table solution, is there an alternative?**
+A: Yes. **Cosmos DB Table API** has a real free tier for some workloads. It is a different service than classic Azure Table Storage, but it is a strong option if you want to keep the table-based design without paying for storage from day one.
+
+**Bottom line**: the GitHub and Azure hosting layers are effectively free for the low-usage pattern this app uses, and the function app plus Static Web App are not subject to the usual "trial ends" cliff. The one service to watch is **Azure Table Storage**, which is billed by usage even though the cost is usually very low for a personal project.
 
 ## Security Best Practices
 

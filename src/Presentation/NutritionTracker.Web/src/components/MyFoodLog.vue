@@ -80,7 +80,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import api from '../services/api'
+import api, { buildUrl } from '../services/api'
 import TodayNutritionSummary from './TodayNutritionSummary.vue'
 
 // Reactive data
@@ -146,7 +146,7 @@ const fetchFoodLogData = async () => {
     console.log('Fetching food log data for user:', userId)
     console.log('Current user object:', currentUser.value)
     
-    const response = await fetch(`/api/FoodLog/user/${userId}`, {
+    const response = await fetch(buildUrl(`/api/FoodLog/user/${userId}`), {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json'
@@ -194,7 +194,7 @@ const fetchFoodLogData = async () => {
 const fetchUserProfile = async () => {
   try {
     if (currentUser.value?.username) {
-      const response = await fetch(`/api/User/username/${encodeURIComponent(currentUser.value.username)}`)
+      const response = await fetch(buildUrl(`/api/User/username/${encodeURIComponent(currentUser.value.username)}`))
       if (response.ok) {
         const json = await response.json()
         const profile = json.data || json

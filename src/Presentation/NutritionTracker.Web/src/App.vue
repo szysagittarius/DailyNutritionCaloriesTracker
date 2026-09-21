@@ -34,8 +34,9 @@
     onMounted(() => {
         loadUserData()
         
-        // If no user data and not on login page, redirect to login
-        if (!currentUser.value && router.currentRoute.value.path !== '/login') {
+        // If no user data and the user is not on the public auth pages, redirect to login
+        const path = router.currentRoute.value.path
+        if (!currentUser.value && path !== '/login' && path !== '/register') {
             router.push('/login')
         }
     })
@@ -60,7 +61,7 @@
 
 <template>
   <div id="app">
-    <router-view v-if="$route.path === '/login'" />
+    <router-view v-if="$route.path === '/login' || $route.path === '/register'" />
     <div v-else>
       <header>
         <!-- Menu Bar -->

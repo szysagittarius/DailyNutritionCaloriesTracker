@@ -163,4 +163,5 @@ const api = {
   }
 };
 
+export { buildUrl };
 export default api;

@@ -149,6 +149,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { buildUrl } from '../services/api'
 
 // Reactive data
 const nutritionItems = ref([])
@@ -181,7 +182,7 @@ const paginatedItems = computed(() => {
 const fetchNutritionData = async () => {
   try {
     console.log('Fetching nutrition data...')
-    const response = await fetch('/api/FoodNutrition', {
+    const response = await fetch(buildUrl('/api/FoodNutrition'), {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json'
@@ -210,7 +211,7 @@ const submitForm = async () => {
   isSubmitting.value = true
   try {
     console.log('Submitting form data:', formData.value)
-    const response = await fetch('/api/FoodNutrition', {
+    const response = await fetch(buildUrl('/api/FoodNutrition'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

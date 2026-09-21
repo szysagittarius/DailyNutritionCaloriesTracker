@@ -133,6 +133,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { buildUrl } from '../../services/api'
 
 const users = ref([])
 const isLoading = ref(false)
@@ -183,7 +184,7 @@ const fetchUsers = async () => {
   isLoading.value = true
   error.value = ''
   try {
-    const res = await fetch('/api/User')
+    const res = await fetch(buildUrl('/api/User'))
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
     const json = await res.json()
     users.value = json.data || json
@@ -221,7 +222,7 @@ const saveUser = async () => {
     // Don't send empty password when editing
     if (isEditing.value && !payload.password) delete payload.password
 
-    const url = isEditing.value ? `/api/User/${editingId.value}` : '/api/User'
+    const url = isEditing.value ? buildUrl(`/api/User/${editingId.value}`) : buildUrl('/api/User')
     const method = isEditing.value ? 'PUT' : 'POST'
 
     const res = await fetch(url, {
@@ -246,7 +247,7 @@ const deleteUser = async () => {
   if (!userToDelete.value) return
   isSaving.value = true
   try {
-    const res = await fetch(`/api/User/${userToDelete.value.id}`, { method: 'DELETE' })
+    const res = await fetch(buildUrl(`/api/User/${userToDelete.value.id}`), { method: 'DELETE' })
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
     await fetchUsers()
     showDeleteConfirm.value = false

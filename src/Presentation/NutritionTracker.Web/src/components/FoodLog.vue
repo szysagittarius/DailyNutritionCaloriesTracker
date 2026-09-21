@@ -19,7 +19,7 @@
 </template>
 
 <script>
-import api from '../services/api'
+import api, { buildUrl } from '../services/api'
 
 export default {
     name: 'FoodLog',
@@ -39,7 +39,7 @@ export default {
             const currentUser = api.getCurrentUser();
             const userId = currentUser?.id || '00000000-0000-0000-0000-000000000001';
 
-            fetch(`/api/FoodLog/user/${userId}`)
+            fetch(buildUrl(`/api/FoodLog/user/${userId}`))
                 .then(response => {
                     if (!response.ok) throw new Error('Network response was not ok');
                     return response.json();

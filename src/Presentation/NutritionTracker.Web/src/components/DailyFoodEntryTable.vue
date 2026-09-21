@@ -39,6 +39,7 @@
 
 <script>
     import { FoodItemDto } from '@/models/FoodItemDto';
+    import { buildUrl } from '../services/api';
 
     export default {
         emits: ['food-log-submitted'],
@@ -139,7 +140,7 @@
                     }))
                 };
                 console.log('📤 Sending apiPayload:', apiPayload);
-                fetch('/api/FoodLog', {
+                fetch(buildUrl('/api/FoodLog'), {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(apiPayload)

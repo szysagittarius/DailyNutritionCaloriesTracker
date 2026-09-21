@@ -32,6 +32,7 @@
     import CircularProgress from './CircularProgress.vue';
     import NutritionTable from './NutritionTable.vue';
     import DailyFoodEntryTable from './DailyFoodEntryTable.vue';
+    import { buildUrl } from '../services/api';
 
     export default {
         components: {
@@ -96,7 +97,7 @@
         methods: {
             fetchData() {
                 this.loading = true;
-                fetch('/api/FoodNutrition')
+                fetch(buildUrl('/api/FoodNutrition'))
                     .then(r => r.json())
                     .then(json => {
                         this.post = json.data || json;
@@ -105,7 +106,7 @@
             },
             async fetchAvailableFoods() {
                 try {
-                    const response = await fetch('/api/FoodNutrition');
+                    const response = await fetch(buildUrl('/api/FoodNutrition'));
                     
                     if (!response.ok) {
                         throw new Error(`HTTP error! status: ${response.status}`);
@@ -160,7 +161,7 @@
 
                     console.log('📤 Sending foodLogData:', foodLogData);
 
-                    const response = await fetch('/api/FoodLog', {
+                    const response = await fetch(buildUrl('/api/FoodLog'), {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
