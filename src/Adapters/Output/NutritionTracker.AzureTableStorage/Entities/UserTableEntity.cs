@@ -19,6 +19,8 @@ public class UserTableEntity : ITableEntity
     public string Name { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;
+    public string RoleName { get; set; } = NutritionTracker.Domain.Entities.UserRole.UserRoleName;
+    public Guid RoleId { get; set; } = NutritionTracker.Domain.Entities.UserRole.DefaultUserRoleId;
     public double SuggestedCalories { get; set; }
     public double SuggestedCarbs { get; set; }
     public double SuggestedFat { get; set; }

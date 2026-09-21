@@ -6,35 +6,28 @@
     import ProfilePage from './components/MyProfile.vue'
     import NutritionManagement from './components/NutritionManagement.vue'
     import AdminPanel from './components/AdminPanel.vue'
-    import { ref, onMounted } from 'vue'
+    import { ref, onMounted, computed } from 'vue'
     import { useRouter } from 'vue-router'
     import api from './services/api'
 
     const foodLogKey = ref(0)
     const activeTab = ref('home')
     const router = useRouter()
-    const currentUser = ref(null) // Changed from api.getCurrentUser() to null
-    const userSuggestedCalories = ref(2456) // Default value
+    const currentUser = ref(null)
+    const userSuggestedCalories = ref(2456)
 
-    // Function to load user data
+    const canAccessAdmin = computed(() => {
+        if (!currentUser.value) return false
+        return currentUser.value.isAdmin === true || currentUser.value.roleName === 'Admin'
+    })
+
     const loadUserData = () => {
         currentUser.value = api.getCurrentUser()
-        
-        // Add debug logging
-        console.log('=== APP.VUE DEBUG USER INFO ===')
-        console.log('api.getCurrentUser() result:', api.getCurrentUser())
-        console.log('currentUser.value:', currentUser.value)
-        console.log('currentUser.value?.id:', currentUser.value?.id)
-        console.log('currentUser.value?.userId:', currentUser.value?.userId)
-        console.log('currentUser.value?.username:', currentUser.value?.username)
-        console.log('=== END APP.VUE DEBUG ===')
     }
 
-    // Load user data when component mounts
     onMounted(() => {
         loadUserData()
-        
-        // If no user data and the user is not on the public auth pages, redirect to login
+
         const path = router.currentRoute.value.path
         if (!currentUser.value && path !== '/login' && path !== '/register') {
             router.push('/login')
@@ -46,6 +39,9 @@
     }
 
     const setActiveTab = (tab) => {
+        if (tab === 'admin' && !canAccessAdmin.value) {
+            return
+        }
         activeTab.value = tab
     }
 
@@ -80,7 +76,7 @@
               Food Log
             </li>
             <li class="user-info">
-              <button class="admin-tab-btn" :class="{ active: activeTab === 'admin' }" @click="setActiveTab('admin')">⚙ Admin</button>
+              <button v-if="canAccessAdmin" class="admin-tab-btn" :class="{ active: activeTab === 'admin' }" @click="setActiveTab('admin')">⚙ Admin</button>
               <span>Welcome, {{ currentUser?.username || 'User' }}!</span>
               <button @click="handleLogout" class="logout-btn">Logout</button>
             </li>

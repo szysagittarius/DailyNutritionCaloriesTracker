@@ -27,6 +27,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NutritionTracker.AzureFunct
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NutritionTracker.AzureTableStorage", "Adapters\Output\NutritionTracker.AzureTableStorage\NutritionTracker.AzureTableStorage.csproj", "{9BC7FE0A-AFBC-4E0C-96D9-F0882F4854F7}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{0AB3BF05-4346-4AA6-1389-037BE0695223}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NutritionTracker.Domain.Tests", "Tests\NutritionTracker.Domain.Tests\NutritionTracker.Domain.Tests.csproj", "{3268F8A6-3E9B-4685-A2AA-1BCD2BCAECC9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -133,6 +137,18 @@ Global
 		{9BC7FE0A-AFBC-4E0C-96D9-F0882F4854F7}.Release|x64.Build.0 = Release|Any CPU
 		{9BC7FE0A-AFBC-4E0C-96D9-F0882F4854F7}.Release|x86.ActiveCfg = Release|Any CPU
 		{9BC7FE0A-AFBC-4E0C-96D9-F0882F4854F7}.Release|x86.Build.0 = Release|Any CPU
+		{3268F8A6-3E9B-4685-A2AA-1BCD2BCAECC9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3268F8A6-3E9B-4685-A2AA-1BCD2BCAECC9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3268F8A6-3E9B-4685-A2AA-1BCD2BCAECC9}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{3268F8A6-3E9B-4685-A2AA-1BCD2BCAECC9}.Debug|x64.Build.0 = Debug|Any CPU
+		{3268F8A6-3E9B-4685-A2AA-1BCD2BCAECC9}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{3268F8A6-3E9B-4685-A2AA-1BCD2BCAECC9}.Debug|x86.Build.0 = Debug|Any CPU
+		{3268F8A6-3E9B-4685-A2AA-1BCD2BCAECC9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3268F8A6-3E9B-4685-A2AA-1BCD2BCAECC9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3268F8A6-3E9B-4685-A2AA-1BCD2BCAECC9}.Release|x64.ActiveCfg = Release|Any CPU
+		{3268F8A6-3E9B-4685-A2AA-1BCD2BCAECC9}.Release|x64.Build.0 = Release|Any CPU
+		{3268F8A6-3E9B-4685-A2AA-1BCD2BCAECC9}.Release|x86.ActiveCfg = Release|Any CPU
+		{3268F8A6-3E9B-4685-A2AA-1BCD2BCAECC9}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -148,5 +164,6 @@ Global
 		{BE2C036D-380D-4F0C-8A54-EE7DE27920D4} = {9862EBB4-52F9-922B-92DA-62005A1D23D0}
 		{9814C636-E7CA-4950-A11B-A26DB9622160} = {F211FDF4-6BA1-773F-F063-3A66FBA262BE}
 		{9BC7FE0A-AFBC-4E0C-96D9-F0882F4854F7} = {9862EBB4-52F9-922B-92DA-62005A1D23D0}
+		{3268F8A6-3E9B-4685-A2AA-1BCD2BCAECC9} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 	EndGlobalSection
 EndGlobal

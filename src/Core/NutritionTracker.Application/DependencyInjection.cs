@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using NutritionTracker.Application.UseCases.FoodLogs;
 using NutritionTracker.Application.UseCases.Nutrition;
+using NutritionTracker.Application.UseCases.UserRoles;
 using NutritionTracker.Application.UseCases.Users;
 
 namespace NutritionTracker.Application;
@@ -23,6 +24,7 @@ public static class DependencyInjection
         services.AddScoped<CreateUserUseCase>();
         services.AddScoped<UpdateUserUseCase>();
         services.AddScoped<DeleteUserUseCase>();
+        services.AddScoped<GetAllUserRolesUseCase>();
 
         // Register FoodNutrition use cases
         services.AddScoped<GetAllFoodNutritionUseCase>();

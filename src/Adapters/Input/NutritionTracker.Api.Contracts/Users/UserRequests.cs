@@ -15,6 +15,8 @@ public class CreateUserRequest
     [MinLength(6, ErrorMessage = "Password must be at least 6 characters")]
     public string Password { get; set; } = string.Empty;
 
+    public Guid? RoleId { get; set; }
+
     [Range(0, double.MaxValue, ErrorMessage = "Suggested calories must be positive")]
     public double SuggestedCalories { get; set; }
 
@@ -37,6 +39,8 @@ public class UpdateUserRequest
     
     [MinLength(6, ErrorMessage = "Password must be at least 6 characters")]
     public string? Password { get; set; }
+
+    public Guid? RoleId { get; set; }
     
     [Range(0, double.MaxValue, ErrorMessage = "Suggested calories must be positive")]
     public double? SuggestedCalories { get; set; }

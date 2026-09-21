@@ -54,12 +54,17 @@ const api = {
     console.log('result.username:', result.username);
     console.log('=== END BACKEND RESPONSE ===');
     
-    // Store user info in localStorage INCLUDING the ID
+    // Store user info in localStorage INCLUDING the role metadata
     if (result.id) {
       const userToStore = {
         id: result.id,
         userId: result.id,
-        username: result.username
+        username: result.username ?? result.name,
+        name: result.name ?? result.username,
+        email: result.email ?? '',
+        roleId: result.roleId ?? null,
+        roleName: result.roleName ?? 'User',
+        isAdmin: result.isAdmin === true || result.roleName === 'Admin'
       };
       
       localStorage.setItem('user', JSON.stringify(userToStore));

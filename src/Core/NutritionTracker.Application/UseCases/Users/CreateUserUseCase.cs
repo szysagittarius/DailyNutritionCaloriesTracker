@@ -12,12 +12,14 @@ public class CreateUserUseCase
         _userRepository = userRepository;
     }
 
-    public async Task<UserDto> ExecuteAsync(string name, string email, string password, 
-        double suggestedCalories, double suggestedCarbs, double suggestedFat, double suggestedProtein)
+    public async Task<UserDto> ExecuteAsync(string name, string email, string password,
+        double suggestedCalories, double suggestedCarbs, double suggestedFat, double suggestedProtein,
+        Guid? roleId = null)
     {
-        var user = User.Create(name, email, password, suggestedCalories, 
-            suggestedCarbs, suggestedFat, suggestedProtein);
-        
+        var effectiveRoleId = roleId ?? UserRole.DefaultUserRoleId;
+        var user = User.Create(name, email, password, suggestedCalories,
+            suggestedCarbs, suggestedFat, suggestedProtein, effectiveRoleId);
+
         var savedUser = await _userRepository.AddAsync(user);
 
         return new UserDto
@@ -25,6 +27,9 @@ public class CreateUserUseCase
             Id = savedUser.Id,
             Name = savedUser.Name,
             Email = savedUser.Email,
+            RoleId = savedUser.RoleId,
+            RoleName = savedUser.RoleName,
+            IsAdmin = savedUser.IsAdmin,
             SuggestedCalories = savedUser.SuggestedCalories,
             SuggestedCarbs = savedUser.SuggestedCarbs,
             SuggestedFat = savedUser.SuggestedFat,

@@ -11,18 +11,19 @@ public class UpdateUserUseCase
         _userRepository = userRepository;
     }
 
-    public async Task<UserDto> ExecuteAsync(Guid userId, string? name, string? email, 
-        string? password, double? suggestedCalories, double? suggestedCarbs, 
-        double? suggestedFat, double? suggestedProtein)
+    public async Task<UserDto> ExecuteAsync(Guid userId, string? name, string? email,
+        string? password, double? suggestedCalories, double? suggestedCarbs,
+        double? suggestedFat, double? suggestedProtein, Guid? roleId = null)
     {
-        var user = await _userRepository.GetByIdAsync(userId) 
+        var user = await _userRepository.GetByIdAsync(userId)
             ?? throw new InvalidOperationException($"User with ID {userId} not found");
 
         if (!string.IsNullOrEmpty(name)) user.UpdateName(name);
         if (!string.IsNullOrEmpty(email)) user.UpdateEmail(email);
         if (!string.IsNullOrEmpty(password)) user.UpdatePassword(password);
-        
-        if (suggestedCalories.HasValue || suggestedCarbs.HasValue || 
+        if (roleId.HasValue && roleId.Value != Guid.Empty) user.UpdateRole(roleId.Value);
+
+        if (suggestedCalories.HasValue || suggestedCarbs.HasValue ||
             suggestedFat.HasValue || suggestedProtein.HasValue)
         {
             user.UpdateNutritionalGoals(
@@ -40,6 +41,9 @@ public class UpdateUserUseCase
             Id = updatedUser.Id,
             Name = updatedUser.Name,
             Email = updatedUser.Email,
+            RoleId = updatedUser.RoleId,
+            RoleName = updatedUser.RoleName,
+            IsAdmin = updatedUser.IsAdmin,
             SuggestedCalories = updatedUser.SuggestedCalories,
             SuggestedCarbs = updatedUser.SuggestedCarbs,
             SuggestedFat = updatedUser.SuggestedFat,

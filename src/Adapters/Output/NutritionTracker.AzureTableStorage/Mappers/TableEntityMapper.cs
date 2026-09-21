@@ -17,6 +17,8 @@ public static class TableEntityMapper
             Name = domain.Name,
             Email = domain.Email,
             Password = domain.Password,
+            RoleId = domain.RoleId,
+            RoleName = domain.RoleName,
             SuggestedCalories = domain.SuggestedCalories,
             SuggestedCarbs = domain.SuggestedCarbs,
             SuggestedFat = domain.SuggestedFat,
@@ -31,6 +33,7 @@ public static class TableEntityMapper
         user.SetPrivateProperty(nameof(User.Name), entity.Name);
         user.SetPrivateProperty(nameof(User.Email), entity.Email);
         user.SetPrivateProperty(nameof(User.Password), entity.Password);
+        user.SetPrivateProperty(nameof(User.RoleId), entity.RoleId == Guid.Empty ? UserRole.DefaultUserRoleId : entity.RoleId);
         user.SetPrivateProperty(nameof(User.SuggestedCalories), entity.SuggestedCalories);
         user.SetPrivateProperty(nameof(User.SuggestedCarbs), entity.SuggestedCarbs);
         user.SetPrivateProperty(nameof(User.SuggestedFat), entity.SuggestedFat);

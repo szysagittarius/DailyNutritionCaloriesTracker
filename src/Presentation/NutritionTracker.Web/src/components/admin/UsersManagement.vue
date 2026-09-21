@@ -26,6 +26,7 @@
           <tr>
             <th>Name</th>
             <th>Email</th>
+            <th>Role</th>
             <th>Cal Goal</th>
             <th>Carbs (g)</th>
             <th>Fat (g)</th>
@@ -40,6 +41,7 @@
           <tr v-for="user in paginatedUsers" :key="user.id" class="um-row">
             <td>{{ user.name }}</td>
             <td class="um-email">{{ user.email }}</td>
+            <td>{{ user.roleName || 'User' }}</td>
             <td>{{ user.suggestedCalories }}</td>
             <td>{{ user.suggestedCarbs }}</td>
             <td>{{ user.suggestedFat }}</td>
@@ -75,6 +77,12 @@
           <div class="um-form-row">
             <label>Email</label>
             <input v-model="form.email" type="email" class="um-input" />
+          </div>
+          <div class="um-form-row">
+            <label>Role</label>
+            <select v-model="form.roleId" class="um-input">
+              <option v-for="role in roles" :key="role.id" :value="role.id">{{ role.name }}</option>
+            </select>
           </div>
           <div class="um-form-row">
             <label>Password {{ isEditing ? '(leave blank to keep current)' : '*' }}</label>
@@ -136,11 +144,13 @@ import { ref, computed, onMounted } from 'vue'
 import { buildUrl } from '../../services/api'
 
 const users = ref([])
+const roles = ref([])
 const isLoading = ref(false)
 const error = ref('')
 const searchQuery = ref('')
 const currentPage = ref(1)
 const itemsPerPage = 10
+const defaultUserRoleId = '11111111-1111-1111-1111-111111111111'
 
 const showModal = ref(false)
 const isEditing = ref(false)
@@ -154,6 +164,7 @@ const userToDelete = ref(null)
 const emptyForm = () => ({
   name: '',
   email: '',
+  roleId: defaultUserRoleId,
   password: '',
   suggestedCalories: 2000,
   suggestedCarbs: 250,
@@ -195,6 +206,21 @@ const fetchUsers = async () => {
   }
 }
 
+const fetchRoles = async () => {
+  try {
+    const res = await fetch(buildUrl('/api/User/roles'))
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    const json = await res.json()
+    roles.value = json.data || json || []
+  } catch (e) {
+    console.error('Failed to load roles:', e)
+    roles.value = [
+      { id: defaultUserRoleId, name: 'User' },
+      { id: '22222222-2222-2222-2222-222222222222', name: 'Admin' }
+    ]
+  }
+}
+
 const saveUser = async () => {
   formError.value = ''
   if (!form.value.name || !form.value.email) {
@@ -219,6 +245,9 @@ const saveUser = async () => {
   isSaving.value = true
   try {
     const payload = { ...form.value }
+    if (!payload.roleId) {
+      payload.roleId = defaultUserRoleId
+    }
     // Don't send empty password when editing
     if (isEditing.value && !payload.password) delete payload.password
 
@@ -274,6 +303,7 @@ const openEditModal = (user) => {
   form.value = {
     name: user.name,
     email: user.email,
+    roleId: user.roleId || defaultUserRoleId,
     password: '',
     suggestedCalories: user.suggestedCalories,
     suggestedCarbs: user.suggestedCarbs,
@@ -294,7 +324,10 @@ const closeModal = () => {
   formError.value = ''
 }
 
-onMounted(fetchUsers)
+onMounted(async () => {
+  await fetchRoles()
+  await fetchUsers()
+})
 </script>
 
 <style scoped>

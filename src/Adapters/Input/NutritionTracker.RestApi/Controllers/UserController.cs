@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using NutritionTracker.Api.Contracts.Common;
 using NutritionTracker.Api.Contracts.Users;
+using NutritionTracker.Application.UseCases.UserRoles;
 using NutritionTracker.Application.UseCases.Users;
+using NutritionTracker.Domain.Entities;
 
 namespace NutritionTracker.RestApi.Controllers;
 
@@ -16,6 +18,7 @@ public class UserController : ControllerBase
     private readonly CreateUserUseCase _createUserUseCase;
     private readonly UpdateUserUseCase _updateUserUseCase;
     private readonly DeleteUserUseCase _deleteUserUseCase;
+    private readonly GetAllUserRolesUseCase _getAllUserRolesUseCase;
     private readonly ILogger<UserController> _logger;
 
     public UserController(
@@ -25,6 +28,7 @@ public class UserController : ControllerBase
         CreateUserUseCase createUserUseCase,
         UpdateUserUseCase updateUserUseCase,
         DeleteUserUseCase deleteUserUseCase,
+        GetAllUserRolesUseCase getAllUserRolesUseCase,
         ILogger<UserController> logger)
     {
         _getAllUsersUseCase = getAllUsersUseCase;
@@ -33,6 +37,7 @@ public class UserController : ControllerBase
         _createUserUseCase = createUserUseCase;
         _updateUserUseCase = updateUserUseCase;
         _deleteUserUseCase = deleteUserUseCase;
+        _getAllUserRolesUseCase = getAllUserRolesUseCase;
         _logger = logger;
     }
 
@@ -47,6 +52,9 @@ public class UserController : ControllerBase
                 Id = u.Id,
                 Name = u.Name,
                 Email = u.Email,
+                RoleId = u.RoleId,
+                RoleName = u.RoleName,
+                IsAdmin = u.IsAdmin,
                 SuggestedCalories = u.SuggestedCalories,
                 SuggestedCarbs = u.SuggestedCarbs,
                 SuggestedFat = u.SuggestedFat,
@@ -77,6 +85,9 @@ public class UserController : ControllerBase
                 Id = user.Id,
                 Name = user.Name,
                 Email = user.Email,
+                RoleId = user.RoleId,
+                RoleName = user.RoleName,
+                IsAdmin = user.IsAdmin,
                 SuggestedCalories = user.SuggestedCalories,
                 SuggestedCarbs = user.SuggestedCarbs,
                 SuggestedFat = user.SuggestedFat,
@@ -107,6 +118,9 @@ public class UserController : ControllerBase
                 Id = user.Id,
                 Name = user.Name,
                 Email = user.Email,
+                RoleId = user.RoleId,
+                RoleName = user.RoleName,
+                IsAdmin = user.IsAdmin,
                 SuggestedCalories = user.SuggestedCalories,
                 SuggestedCarbs = user.SuggestedCarbs,
                 SuggestedFat = user.SuggestedFat,
@@ -119,6 +133,27 @@ public class UserController : ControllerBase
         {
             _logger.LogError(ex, "Error occurred while fetching user with username {Username}", username);
             return StatusCode(500, ApiResponse<UserResponse>.FailureResult("An error occurred while fetching the user"));
+        }
+    }
+
+    [HttpGet("roles")]
+    public async Task<ActionResult<ApiResponse<IEnumerable<UserRoleResponse>>>> GetRoles()
+    {
+        try
+        {
+            var roles = await _getAllUserRolesUseCase.ExecuteAsync();
+            var response = roles.Select(r => new UserRoleResponse
+            {
+                Id = r.Id,
+                Name = r.Name
+            });
+
+            return Ok(ApiResponse<IEnumerable<UserRoleResponse>>.SuccessResult(response));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while fetching user roles");
+            return StatusCode(500, ApiResponse<IEnumerable<UserRoleResponse>>.FailureResult("An error occurred while fetching roles"));
         }
     }
 
@@ -138,6 +173,9 @@ public class UserController : ControllerBase
             {
                 Id = user.Id,
                 Username = user.Name,
+                RoleId = user.RoleId,
+                RoleName = user.RoleName,
+                IsAdmin = user.IsAdmin,
                 Message = "Login successful"
             });
         }
@@ -164,13 +202,17 @@ public class UserController : ControllerBase
                 request.SuggestedCalories,
                 request.SuggestedCarbs,
                 request.SuggestedFat,
-                request.SuggestedProtein);
+                request.SuggestedProtein,
+                request.RoleId ?? UserRole.DefaultUserRoleId);
 
             var response = new UserResponse
             {
                 Id = user.Id,
                 Name = user.Name,
                 Email = user.Email,
+                RoleId = user.RoleId,
+                RoleName = user.RoleName,
+                IsAdmin = user.IsAdmin,
                 SuggestedCalories = user.SuggestedCalories,
                 SuggestedCarbs = user.SuggestedCarbs,
                 SuggestedFat = user.SuggestedFat,
@@ -203,13 +245,17 @@ public class UserController : ControllerBase
                 request.SuggestedCalories,
                 request.SuggestedCarbs,
                 request.SuggestedFat,
-                request.SuggestedProtein);
+                request.SuggestedProtein,
+                request.RoleId);
 
             var response = new UserResponse
             {
                 Id = user.Id,
                 Name = user.Name,
                 Email = user.Email,
+                RoleId = user.RoleId,
+                RoleName = user.RoleName,
+                IsAdmin = user.IsAdmin,
                 SuggestedCalories = user.SuggestedCalories,
                 SuggestedCarbs = user.SuggestedCarbs,
                 SuggestedFat = user.SuggestedFat,

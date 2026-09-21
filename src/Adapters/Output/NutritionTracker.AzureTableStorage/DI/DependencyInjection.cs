@@ -16,6 +16,7 @@ public static class DependencyInjection
 
         // Register repositories
         services.AddScoped<IUserRepository, UserTableRepository>();
+        services.AddScoped<IUserRoleRepository, UserRoleTableRepository>();
         services.AddScoped<IFoodLogRepository, FoodLogTableRepository>();
         services.AddScoped<IFoodNutritionRepository, FoodNutritionTableRepository>();
 

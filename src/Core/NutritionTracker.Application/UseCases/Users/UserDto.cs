@@ -6,6 +6,9 @@ public class UserDto
     public string Name { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;
+    public Guid RoleId { get; set; }
+    public string RoleName { get; set; } = string.Empty;
+    public bool IsAdmin { get; set; }
     public double SuggestedCalories { get; set; }
     public double SuggestedCarbs { get; set; }
     public double SuggestedFat { get; set; }
