@@ -15,7 +15,9 @@ on:
 
 env:
   APP_LOCATION: 'src/Presentation/NutritionTracker.Web'
-  OUTPUT_LOCATION: 'dist'
+  # Pre-built output folder, passed directly as app_location on deploy (avoids output_location
+  # being resolved relative to repo root instead of APP_LOCATION when skip_app_build is true).
+  DIST_LOCATION: 'src/Presentation/NutritionTracker.Web/dist'
 
 jobs:
   build-and-deploy:
@@ -48,8 +50,8 @@ jobs:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: 'upload'
-          app_location: ${{ env.APP_LOCATION }}
-          output_location: ${{ env.OUTPUT_LOCATION }}
+          app_location: ${{ env.DIST_LOCATION }}
+          output_location: ''
           skip_app_build: true
 
   close-pull-request:
