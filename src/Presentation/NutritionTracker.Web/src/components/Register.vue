@@ -1,8 +1,8 @@
 <template>
   <div class="login-container">
     <div class="login-card">
-      <h2 class="login-title">Login to Nutrition Tracker</h2>
-      <form @submit.prevent="handleLogin" class="login-form">
+      <h2 class="login-title">Create your account</h2>
+      <form @submit.prevent="handleRegister" class="login-form">
         <div class="form-group">
           <label for="username" class="form-label">Username:</label>
           <input
@@ -10,7 +10,18 @@
             v-model="username"
             type="text"
             class="form-input"
-            placeholder="Enter your username"
+            placeholder="Choose a username"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label for="email" class="form-label">Email:</label>
+          <input
+            id="email"
+            v-model="email"
+            type="email"
+            class="form-input"
+            placeholder="Enter your email"
             required
           />
         </div>
@@ -21,20 +32,36 @@
             v-model="password"
             type="password"
             class="form-input"
-            placeholder="Enter your password"
+            placeholder="At least 6 characters"
+            minlength="6"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label for="confirmPassword" class="form-label">Confirm password:</label>
+          <input
+            id="confirmPassword"
+            v-model="confirmPassword"
+            type="password"
+            class="form-input"
+            placeholder="Re-enter your password"
+            minlength="6"
             required
           />
         </div>
         <button type="submit" class="login-button" :disabled="isLoading">
-          {{ isLoading ? 'Logging in...' : 'Login' }}
+          {{ isLoading ? 'Creating account...' : 'Register' }}
         </button>
         <div v-if="errorMessage" class="error-message">
           {{ errorMessage }}
         </div>
+        <div v-if="successMessage" class="success-message">
+          {{ successMessage }}
+        </div>
       </form>
       <p class="switch-link">
-        Don't have an account?
-        <router-link to="/register">Register</router-link>
+        Already have an account?
+        <router-link to="/login">Log in</router-link>
       </p>
     </div>
   </div>
@@ -46,32 +73,40 @@ import { useRouter } from 'vue-router';
 import api from '../services/api';
 
 export default {
-  name: 'Login',
+  name: 'Register',
   setup() {
     const username = ref('');
+    const email = ref('');
     const password = ref('');
+    const confirmPassword = ref('');
     const isLoading = ref(false);
     const errorMessage = ref('');
+    const successMessage = ref('');
     const router = useRouter();
 
-    const handleLogin = async () => {
-      isLoading.value = true;
+    const handleRegister = async () => {
       errorMessage.value = '';
-      
+      successMessage.value = '';
+
+      if (password.value !== confirmPassword.value) {
+        errorMessage.value = 'Passwords do not match.';
+        return;
+      }
+
+      isLoading.value = true;
+
       try {
-        const result = await api.login({ 
-          username: username.value, 
-          password: password.value 
+        await api.createUser({
+          username: username.value,
+          email: email.value,
+          password: password.value,
         });
-        
-        console.log('Login successful, user data stored:', result);
-        
-        // Force page refresh to reload App.vue with user data
-        window.location.href = '/';
-        
+
+        successMessage.value = 'Account created! Redirecting to login...';
+        setTimeout(() => router.push('/login'), 1200);
       } catch (error) {
-        console.error('Error during login:', error);
-        errorMessage.value = 'Invalid username or password.';
+        console.error('Error during registration:', error);
+        errorMessage.value = 'Could not create account. Please try a different username/email.';
       } finally {
         isLoading.value = false;
       }
@@ -79,10 +114,13 @@ export default {
 
     return {
       username,
+      email,
       password,
+      confirmPassword,
       isLoading,
       errorMessage,
-      handleLogin,
+      successMessage,
+      handleRegister,
     };
   },
 };
@@ -104,7 +142,7 @@ export default {
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
   padding: 50px;
   width: 100%;
-  max-width: 600px; /* This is OK - it's just for the login form */
+  max-width: 600px;
   min-width: 350px;
 }
 
@@ -135,7 +173,7 @@ export default {
 }
 
 .form-input {
-  padding: 14px 16px; /* Increased padding for desktop */
+  padding: 14px 16px;
   border: 2px solid #e1e5e9;
   border-radius: 8px;
   font-size: 1rem;
@@ -154,9 +192,9 @@ export default {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border: none;
-  padding: 16px 24px; /* Increased padding */
+  padding: 16px 24px;
   border-radius: 8px;
-  font-size: 1.1rem; /* Larger font for desktop */
+  font-size: 1.1rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -181,6 +219,17 @@ export default {
   padding: 10px;
   background-color: #f8d7da;
   border: 1px solid #f5c6cb;
+  border-radius: 6px;
+}
+
+.success-message {
+  color: #155724;
+  text-align: center;
+  font-size: 0.9rem;
+  margin-top: 10px;
+  padding: 10px;
+  background-color: #d4edda;
+  border: 1px solid #c3e6cb;
   border-radius: 6px;
 }
 

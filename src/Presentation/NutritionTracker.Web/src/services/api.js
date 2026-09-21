@@ -14,7 +14,12 @@ const api = {
       body: JSON.stringify({
         name: userData.username,
         email: userData.email,
-        password: userData.password
+        password: userData.password,
+        // Sensible starting goals; the user can adjust them later on the Profile page.
+        suggestedCalories: userData.suggestedCalories ?? 2456,
+        suggestedCarbs: userData.suggestedCarbs ?? 246,
+        suggestedFat: userData.suggestedFat ?? 68,
+        suggestedProtein: userData.suggestedProtein ?? 215
       }),
     });
     

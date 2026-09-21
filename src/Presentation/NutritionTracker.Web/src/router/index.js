@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Login from '../components/Login.vue'
+import Register from '../components/Register.vue'
 import MainApp from '../views/MainApp.vue'
 import api from '../services/api'
 
@@ -8,6 +9,11 @@ const routes = [
     path: '/login',
     name: 'Login',
     component: Login
+  },
+  {
+    path: '/register',
+    name: 'Register',
+    component: Register
   },
   {
     path: '/',
@@ -29,7 +35,7 @@ router.beforeEach((to, from, next) => {
 
   if (requiresAuth && !currentUser) {
     next('/login')
-  } else if (to.path === '/login' && currentUser) {
+  } else if ((to.path === '/login' || to.path === '/register') && currentUser) {
     next('/')
   } else {
     next()
