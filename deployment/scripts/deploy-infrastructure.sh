@@ -68,6 +68,16 @@ else
     --os-type Linux
 fi
 
+# Azure disables SCM basic-auth publishing by default, which breaks publish-profile deploys
+# ("Kudu ... Unauthorized 401") unless explicitly enabled
+az resource update \
+  --resource-group $RESOURCE_GROUP \
+  --name scm \
+  --namespace Microsoft.Web \
+  --resource-type basicPublishingCredentialsPolicies \
+  --parent sites/$FUNCTION_APP \
+  --set properties.allow=true
+
 # Create Static Web App for frontend hosting (Free tier, skip if it already exists)
 if az staticwebapp show --name $STATIC_WEB_APP --resource-group $RESOURCE_GROUP &>/dev/null; then
   echo "Static Web App $STATIC_WEB_APP already exists, skipping"

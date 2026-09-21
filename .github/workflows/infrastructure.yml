@@ -102,6 +102,16 @@ jobs:
               --os-type Linux
           fi
 
+          # Azure disables SCM basic-auth publishing by default, which breaks publish-profile deploys
+          # (Azure/functions-action fails with "Kudu ... Unauthorized 401") unless explicitly enabled
+          az resource update \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --name scm \
+            --namespace Microsoft.Web \
+            --resource-type basicPublishingCredentialsPolicies \
+            --parent sites/${{ env.FUNCTION_APP }} \
+            --set properties.allow=true
+
     - name: Configure Function App Settings
       uses: azure/CLI@v2
       with:

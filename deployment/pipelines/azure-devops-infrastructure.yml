@@ -90,6 +90,21 @@ stages:
                   --os-type Linux
 
           - task: AzureCLI@2
+            displayName: 'Enable SCM basic-auth publishing (required for publish-profile deploys)'
+            inputs:
+              azureSubscription: '$(azureServiceConnection)'
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                az resource update \
+                  --resource-group $(resourceGroup) \
+                  --name scm \
+                  --namespace Microsoft.Web \
+                  --resource-type basicPublishingCredentialsPolicies \
+                  --parent sites/$(functionApp) \
+                  --set properties.allow=true
+
+          - task: AzureCLI@2
             displayName: 'Configure Function App Settings'
             inputs:
               azureSubscription: '$(azureServiceConnection)'
