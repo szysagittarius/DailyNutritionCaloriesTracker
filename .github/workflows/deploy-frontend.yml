@@ -15,10 +15,7 @@ on:
 
 env:
   APP_LOCATION: 'src/Presentation/NutritionTracker.Web'
-  # skip_app_build deploys expect app_location to be the repo root, with output_location as the
-  # full path to the pre-built folder from the repo root (nested app_location + relative output
-  # gets silently mis-resolved by the v1 action, deploying raw source instead of the build).
-  DEPLOY_OUTPUT_LOCATION: 'src/Presentation/NutritionTracker.Web/dist'
+  OUTPUT_LOCATION: 'dist'
 
 jobs:
   build-and-deploy:
@@ -29,31 +26,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install dependencies
-        working-directory: ${{ env.APP_LOCATION }}
-        run: npm ci
-
-      - name: Build
-        working-directory: ${{ env.APP_LOCATION }}
-        # VITE_API_URL must point at the deployed Function App, e.g. https://func-nutrition-tracker-dev.azurewebsites.net
-        run: npm run build
-        env:
-          VITE_API_URL: ${{ vars.FUNCTION_APP_URL }}
-
       - name: Deploy to Azure Static Web Apps
         uses: Azure/static-web-apps-deploy@v1
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: 'upload'
-          app_location: '/'
-          output_location: ${{ env.DEPLOY_OUTPUT_LOCATION }}
-          skip_app_build: true
+          app_location: ${{ env.APP_LOCATION }}
+          output_location: ${{ env.OUTPUT_LOCATION }}
+        env:
+          # Read by `npm run build` (Oryx auto-detects and runs it) to bake the API URL into the bundle.
+          VITE_API_URL: ${{ vars.FUNCTION_APP_URL }}
 
   close-pull-request:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
