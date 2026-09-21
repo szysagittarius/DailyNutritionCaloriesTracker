@@ -152,6 +152,39 @@ Uses `UseDevelopmentStorage=true` from `local.settings.json`.
 
 **Estimated total**: $0–0.05/month in year one, ~$0.50–2.00/month after.
 
+## FAQ: Is everything really free, forever?
+
+**Q: Are the GitHub Actions workflows free?**
+A: Yes, with no time limit — this repo is a **public** GitHub repository, and GitHub does not meter
+Actions minutes at all for public repos (private repos get 2,000 free minutes/month, then billed).
+Verified with `gh repo view --json visibility` → `PUBLIC`.
+
+**Q: Are the Azure resources free forever, or just for a trial period?**
+A: It depends on the resource — this subscription (`Azure subscription 1`, quota ID
+`PayAsYouGo_2014-09-01`) is a standard **Pay-As-You-Go** subscription, not a brand-new Free
+Trial/Student account, so it does **not** get the "free for 12 months" new-account credits.
+What actually applies here:
+- **Azure Functions (Consumption plan)** — genuinely free forever, no time limit. The 1M
+  requests + 400,000 GB-s/month grant is part of Azure's **Always Free** tier and applies to
+  every subscription (including Pay-As-You-Go), every month, indefinitely. You're only billed if
+  you exceed that grant in a given month.
+- **Azure Static Web Apps (Free SKU)** — also **Always Free**, no time limit, as long as you stay
+  within the tier's limits (100GB bandwidth/month, etc.). This is a permanent $0 pricing tier, not
+  a trial.
+- **Azure Table Storage** — **not** free. Storage accounts are billed pay-as-you-go for capacity
+  and transactions from day one on this subscription type (the "5GB + 20K ops free for 12 months"
+  row above only applies to new Free Trial/Azure-for-Students subscriptions). In practice, a
+  single-user hobby project's storage/transaction volume costs a few **cents per month**, not $0.
+- **Application Insights / Log Analytics** (created alongside the Function App) has its own
+  Always Free ingestion allowance (5GB/month) — fine for this project's traffic, but would start
+  billing if log volume grew significantly.
+
+**Bottom line**: no component here has a hard expiration date or a "trial ends, then you get
+charged full price" cliff. The Consumption Functions plan and the Static Web App are genuinely
+free forever at this usage level; Table Storage is billed but at fractions of a cent/month for a
+personal project. Keep an eye on the Azure Portal's **Cost Management + Billing** blade if you're
+ever unsure.
+
 ## Security Best Practices
 
 1. Use Managed Identity where possible instead of connection strings
