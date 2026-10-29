@@ -3,6 +3,7 @@ using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
 using NutritionTracker.Api.Contracts.Common;
 using NutritionTracker.Api.Contracts.Users;
+using NutritionTracker.Application.UseCases.UserRoles;
 using NutritionTracker.Application.UseCases.Users;
 using System.Net;
 using System.Text.Json;
@@ -17,6 +18,7 @@ public class UserFunctions
     private readonly GetUserByUsernameUseCase _getUserByUsernameUseCase;
     private readonly CreateUserUseCase _createUserUseCase;
     private readonly UpdateUserUseCase _updateUserUseCase;
+    private readonly GetAllUserRolesUseCase _getAllUserRolesUseCase;
 
     public UserFunctions(
         ILogger<UserFunctions> logger,
@@ -24,7 +26,8 @@ public class UserFunctions
         GetUserByIdUseCase getUserByIdUseCase,
         GetUserByUsernameUseCase getUserByUsernameUseCase,
         CreateUserUseCase createUserUseCase,
-        UpdateUserUseCase updateUserUseCase)
+        UpdateUserUseCase updateUserUseCase,
+        GetAllUserRolesUseCase getAllUserRolesUseCase)
     {
         _logger = logger;
         _getAllUsersUseCase = getAllUsersUseCase;
@@ -32,6 +35,31 @@ public class UserFunctions
         _getUserByUsernameUseCase = getUserByUsernameUseCase;
         _createUserUseCase = createUserUseCase;
         _updateUserUseCase = updateUserUseCase;
+        _getAllUserRolesUseCase = getAllUserRolesUseCase;
+    }
+
+    [Function("GetUserRoles")]
+    public async Task<HttpResponseData> GetUserRoles(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "users/roles")] HttpRequestData req)
+    {
+        try
+        {
+            var roles = await _getAllUserRolesUseCase.ExecuteAsync();
+            var response = roles.Select(r => new UserRoleResponse
+            {
+                Id = r.Id,
+                Name = r.Name
+            });
+
+            return await CreateJsonResponse(req, HttpStatusCode.OK,
+                ApiResponse<IEnumerable<UserRoleResponse>>.SuccessResult(response));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting user roles");
+            return await CreateJsonResponse(req, HttpStatusCode.InternalServerError,
+                ApiResponse<IEnumerable<UserRoleResponse>>.FailureResult("An error occurred"));
+        }
     }
 
     [Function("LoginUser")]
@@ -53,6 +81,9 @@ public class UserFunctions
                 Id = u.Id,
                 Name = u.Name,
                 Email = u.Email,
+                RoleId = u.RoleId,
+                RoleName = u.RoleName,
+                IsAdmin = u.IsAdmin,
                 SuggestedCalories = u.SuggestedCalories,
                 SuggestedCarbs = u.SuggestedCarbs,
                 SuggestedFat = u.SuggestedFat,
@@ -95,6 +126,9 @@ public class UserFunctions
                 Id = user.Id,
                 Name = user.Name,
                 Email = user.Email,
+                RoleId = user.RoleId,
+                RoleName = user.RoleName,
+                IsAdmin = user.IsAdmin,
                 SuggestedCalories = user.SuggestedCalories,
                 SuggestedCarbs = user.SuggestedCarbs,
                 SuggestedFat = user.SuggestedFat,
@@ -131,6 +165,9 @@ public class UserFunctions
                 Id = user.Id,
                 Name = user.Name,
                 Email = user.Email,
+                RoleId = user.RoleId,
+                RoleName = user.RoleName,
+                IsAdmin = user.IsAdmin,
                 SuggestedCalories = user.SuggestedCalories,
                 SuggestedCarbs = user.SuggestedCarbs,
                 SuggestedFat = user.SuggestedFat,
@@ -179,6 +216,9 @@ public class UserFunctions
                 {
                     Id = user.Id,
                     Username = user.Name,
+                    RoleId = user.RoleId,
+                    RoleName = user.RoleName,
+                    IsAdmin = user.IsAdmin,
                     Message = "Login successful"
                 });
         }
@@ -223,13 +263,17 @@ public class UserFunctions
                 request.SuggestedCalories,
                 request.SuggestedCarbs,
                 request.SuggestedFat,
-                request.SuggestedProtein);
+                request.SuggestedProtein,
+                request.RoleId);
 
             var response = new UserResponse
             {
                 Id = user.Id,
                 Name = user.Name,
                 Email = user.Email,
+                RoleId = user.RoleId,
+                RoleName = user.RoleName,
+                IsAdmin = user.IsAdmin,
                 SuggestedCalories = user.SuggestedCalories,
                 SuggestedCarbs = user.SuggestedCarbs,
                 SuggestedFat = user.SuggestedFat,
@@ -280,13 +324,17 @@ public class UserFunctions
                 request.SuggestedCalories,
                 request.SuggestedCarbs,
                 request.SuggestedFat,
-                request.SuggestedProtein);
+                request.SuggestedProtein,
+                request.RoleId);
 
             var response = new UserResponse
             {
                 Id = user.Id,
                 Name = user.Name,
                 Email = user.Email,
+                RoleId = user.RoleId,
+                RoleName = user.RoleName,
+                IsAdmin = user.IsAdmin,
                 SuggestedCalories = user.SuggestedCalories,
                 SuggestedCarbs = user.SuggestedCarbs,
                 SuggestedFat = user.SuggestedFat,

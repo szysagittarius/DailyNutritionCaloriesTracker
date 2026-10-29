@@ -102,6 +102,7 @@ The frontend reads its API URL from `VITE_API_URL` at build time (see
 | CORS errors calling the API from the browser | `az functionapp cors add --name func-nutrition-tracker-dev --resource-group rg-nutrition-tracker-dev --allowed-origins "https://<your-static-web-app-hostname>"` |
 | Function App not responding | `az functionapp restart --name func-nutrition-tracker-dev --resource-group rg-nutrition-tracker-dev`, then check `az webapp log tail --name func-nutrition-tracker-dev --resource-group rg-nutrition-tracker-dev` |
 | Need to see full GitHub Actions run/job logs (not just public annotations) | Install GitHub CLI (`winget install --id GitHub.cli -e`), then `gh auth login --web`, then `gh run view <run-id> --log` or `gh run view <run-id> --log-failed` to pull the exact failing step's output |
+| Login succeeds but `roleName`/`roleId`/`isAdmin` come back empty or `false`, and the Admin page can't set user roles | The Azure Functions adapter (`src/Adapters/Input/NutritionTracker.AzureFunctions/Functions/UserFunctions.cs`) was written before the role feature and never mapped `RoleId`/`RoleName`/`IsAdmin` into responses, never exposed `GET /api/users/roles`, and never passed `RoleId` through on create/update — even though the ASP.NET Core `UserController.cs` had all of this. Fixed by updating `UserFunctions.cs` to match `UserController.cs` field-for-field; redeploy the backend after this fix. |
 
 ## Verifying on the Azure Portal
 
@@ -112,6 +113,23 @@ The frontend reads its API URL from `VITE_API_URL` at build time (see
 5. Open **`swa-nutrition-tracker-dev`** → grab the **URL** on the Overview page → open it in a browser to see the live frontend; use browser DevTools → Network tab to confirm it's calling the Function App URL successfully (watch for CORS errors here specifically).
 6. If CORS errors appear, tighten it: `az functionapp cors add --name func-nutrition-tracker-dev --resource-group rg-nutrition-tracker-dev --allowed-origins "https://<your-static-web-app-hostname>"`.
 7. If the page is blank or DevTools shows a `Failed to resolve module specifier` error, view page source (or `curl` the URL) — the `<script>` tag should point at a hashed file like `/assets/index-XXXX.js`, **not** `/src/main.js`. If it's the latter, the wrong (raw source) content was deployed; see the troubleshooting table above.
+
+## Seed / Test Accounts & Admin Access
+
+The app ships with a few seeded accounts so you can log in without registering first. **Passwords are intentionally not written in this document** — they live only in a local, untracked JSON file so they never end up in git history or a public repo.
+
+| Role | Username | Email |
+|---|---|---|
+| Admin | System Admin | `admin@nutritiontracker.local` |
+| User | Demo User | `demo@nutritiontracker.local` |
+| User | Athlete User | `athlete@nutritiontracker.local` |
+| User | Cutting User | `cutting@nutritiontracker.local` |
+
+- Passwords for the accounts above are stored in a local-only file (not committed, not in this repo): `seed-user-credentials.json`. Ask whoever set up the environment for that file, or regenerate/reset passwords yourself via the Admin page once logged in.
+- For a **SQL Server** backend: these accounts come from [`seed_users.sql`](../src/Adapters/Output/NutritionTracker.SqlServer/SeedData/seed_users.sql) — run it once after `dotnet ef database update` (see [`src/README.md`](../src/README.md)).
+- For the **Azure Table Storage** backend (live Azure deployment): these accounts must be inserted directly into the `Users` table of the storage account referenced by the Function App's `AzureTableStorageConnectionString` setting (currently `stnutritiontrackerdev`) — there's no automatic seeding step for Table Storage yet. Use `az storage entity insert` or the Storage Browser in the Azure Portal.
+- New users who self-register via `/register` always get the **User** role by default — they never get Admin automatically. To promote someone to Admin, log in as an Admin and update their role from the **Admin → Users** page (see [RBAC-Plan.md](../Docs/RBAC-Plan.md)), or update the `RoleId` column/property directly (Admin role id is `22222222-2222-2222-2222-222222222222`, User role id is `11111111-1111-1111-1111-111111111111`, defined in [`UserRole.cs`](../src/Core/NutritionTracker.Domain/Entities/UserRole.cs)).
+- Login page: `https://<your-static-web-app-hostname>/login` (e.g. `https://lively-field-00d73b00f.5.azurestaticapps.net/login`)
 
 ## Alternative: Azure DevOps instead of GitHub Actions
 
