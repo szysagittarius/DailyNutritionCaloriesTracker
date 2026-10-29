@@ -35,7 +35,7 @@ public class UserTableRepository : IUserRepository
     public async Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
     {
         var query = _tableClient.QueryAsync<Entities.UserTableEntity>(
-            filter: $"PartitionKey eq 'USER' and Email eq '{email}'",
+            filter: $"PartitionKey eq 'USER' and Email eq '{email.Replace("'", "''")}'",
             cancellationToken: cancellationToken);
 
         await foreach (var entity in query)
@@ -49,7 +49,7 @@ public class UserTableRepository : IUserRepository
     public async Task<User?> GetByUsernameAsync(string username, CancellationToken cancellationToken = default)
     {
         var query = _tableClient.QueryAsync<Entities.UserTableEntity>(
-            filter: $"PartitionKey eq 'USER' and Name eq '{username}'",
+            filter: $"PartitionKey eq 'USER' and Name eq '{username.Replace("'", "''")}'",
             cancellationToken: cancellationToken);
 
         await foreach (var entity in query)

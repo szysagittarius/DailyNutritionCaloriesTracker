@@ -14,7 +14,11 @@ public class GetUserByUsernameUseCase
     public async Task<UserDto?> ExecuteAsync(string username)
     {
         var user = await _userRepository.GetByUsernameAsync(username);
-        
+
+        // Allow signing in with the email address as well as the display name
+        if (user == null && username.Contains('@'))
+            user = await _userRepository.GetByEmailAsync(username);
+
         if (user == null)
             return null;
 
