@@ -103,7 +103,7 @@ public class UserFunctions
 
     [Function("GetUserById")]
     public async Task<HttpResponseData> GetUserById(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "users/{id}")] HttpRequestData req,
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "users/{id:guid}")] HttpRequestData req,
         string id)
     {
         try
@@ -293,7 +293,7 @@ public class UserFunctions
 
     [Function("UpdateUser")]
     public async Task<HttpResponseData> UpdateUser(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "users/{id}")] HttpRequestData req,
+        [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "users/{id:guid}")] HttpRequestData req,
         string id)
     {
         try
